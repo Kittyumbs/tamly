@@ -275,8 +275,67 @@ async function loadExistingData() {
     console.log('📥 Loading existing data from backend...');
 
     try {
-        // TODO: Update this URL to your Render backend URL
-        const BACKEND_URL = 'https://tamly.onrender.com';
+        // Try Render backend first, fallback to local server
+        let BACKEND_URL = 'https://tamly.onrender.com';
+        let backendAvailable = false;
+
+        // Test connection to Render backend
+        try {
+            const testResponse = await fetch(`${BACKEND_URL}/health`, {
+                method: 'GET',
+                headers: { 'Cache-Control': 'no-cache' }
+            });
+            if (testResponse.ok) {
+                backendAvailable = true;
+                console.log('✅ Render backend is available');
+            }
+        } catch (error) {
+            console.log('⚠️ Render backend not available, trying local server...');
+        }
+
+        // If Render backend is not available, try local server
+        if (!backendAvailable) {
+            BACKEND_URL = 'http://localhost:3000';
+            try {
+                const testResponse = await fetch(`${BACKEND_URL}/health`, {
+                    method: 'GET',
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                if (testResponse.ok) {
+                    backendAvailable = true;
+                    console.log('✅ Local backend is available');
+                }
+            } catch (error) {
+                console.log('⚠️ Local backend not available either');
+            }
+        }
+
+        if (!backendAvailable) {
+            console.log('ℹ️ No backend available, using default data');
+            // Use default data when no backend is available
+            existingProfileData = {
+                name: "Mẹ Bỉm Sữa Review",
+                bio: "Chia sẻ kinh nghiệm nuôi dạy con & săn deal hot cho bé yêu 🍼 Follow để nhận voucher mỗi ngày nhé!",
+                avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuD4-4nseipxqo0kUCZE9uFM44MdTSYdXZK7Ip6KdlyymxoMUAFfS7Ve06-Q9hHGxjPluC6X1APdZdN4rucbf81eaxjkm_YhmgvFAXw4pcASA-ix8llEXZC5nUN6SacEV2XF_k-dtb9Yva94yHVEtkau6hvENT-rlCm-EdLda-wSIKp47tOJkZDAYu-1VrHNM-2ra5qRFgsaqhl86noxOuc2f75yKQwk7z-_QUC1XkJ0rEhR3XHAN6BLxLkkhAlcI2nDPjqbfeDSZ3h2"
+            };
+            existingBackgroundImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuC8aAcLjxpyVZyPCmL72kiLClze8F-26nZRzXjNA-qmY4h-RzSJhNeTrZLXfhEr5bEkoErKSv2uzqv6I_Z1c0WGToWBBo8lmLUNeAu_LDe-B6S3W7w34pYYpdPQrqxAz8xq3TpZqdZYGIbp69Ua_oGY5QBQh5-87_vbnvnV7ZBjOqxAz-WTUZIAhSwh7ZlLA7pHlcbVbQ-UyX1jMuk4iQ_-RC6DX9nJz-Q_qINfaQcsZmJBDXDCP-yJdKV9S66Jyooe_Tw2Che6pEPO";
+
+            // Populate profile fields with defaults
+            document.querySelector('input[type="text"]').value = existingProfileData.name;
+            document.querySelector('textarea').value = existingProfileData.bio;
+            document.getElementById('avatarPreview').src = existingProfileData.avatar;
+
+            // Set background preview
+            const bgPreview = document.getElementById('backgroundPreview');
+            bgPreview.style.backgroundImage = `url("${existingBackgroundImage}")`;
+            bgPreview.style.backgroundSize = 'cover';
+            bgPreview.style.backgroundPosition = 'center';
+            bgPreview.innerHTML = ''; // Remove placeholder
+
+            // Use empty categories array
+            categories = [];
+            return;
+        }
 
         // Load config data
         const configResponse = await fetch(`${BACKEND_URL}/api/site-data`);
@@ -324,6 +383,14 @@ async function loadExistingData() {
     } catch (error) {
         console.error('❌ Error loading existing data:', error);
         // Continue with empty data - user can start fresh
+        console.log('ℹ️ Using default data due to error');
+        existingProfileData = {
+            name: "Mẹ Bỉm Sữa Review",
+            bio: "Chia sẻ kinh nghiệm nuôi dạy con & săn deal hot cho bé yêu 🍼 Follow để nhận voucher mỗi ngày nhé!",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuD4-4nseipxqo0kUCZE9uFM44MdTSYdXZK7Ip6KdlyymxoMUAFfS7Ve06-Q9hHGxjPluC6X1APdZdN4rucbf81eaxjkm_YhmgvFAXw4pcASA-ix8llEXZC5nUN6SacEV2XF_k-dtb9Yva94yHVEtkau6hvENT-rlCm-EdLda-wSIKp47tOJkZDAYu-1VrHNM-2ra5qRFgsaqhl86noxOuc2f75yKQwk7z-_QUC1XkJ0rEhR3XHAN6BLxLkkhAlcI2nDPjqbfeDSZ3h2"
+        };
+        existingBackgroundImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuC8aAcLjxpyVZyPCmL72kiLClze8F-26nZRzXjNA-qmY4h-RzSJhNeTrZLXfhEr5bEkoErKSv2uzqv6I_Z1c0WGToWBBo8lmLUNeAu_LDe-B6S3W7w34pYYpdPQrqxAz8xq3TpZqdZYGIbp69Ua_oGY5QBQh5-87_vbnvnV7ZBjOqxAz-WTUZIAhSwh7ZlLA7pHlcbVbQ-UyX1jMuk4iQ_-RC6DX9nJz-Q_qINfaQcsZmJBDXDCP-yJdKV9S66Jyooe_Tw2Che6pEPO";
+        categories = [];
     }
 }
 
