@@ -59,6 +59,9 @@ app.use(cors({
   credentials: true
 }));
 
+// Serve static files (HTML, CSS, JS, images, etc.)
+app.use(express.static('.'));
+
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({
