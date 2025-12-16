@@ -43,7 +43,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://nhixinhne.vercel.app', 'https://nhixinhne-a39e2.web.app'],
+  origin: ['http://localhost:3000', 'https://tamly.onrender.com', 'https://tamly-ce213.web.app'],
   credentials: true
 }));
 
