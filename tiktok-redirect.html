@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mở TikTok</title>
+    <meta name="description" content="Mở video TikTok trong ứng dụng">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #FF0050 0%, #00F2EA 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 400px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .logo svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #FF0050;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .instructions {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .instructions strong {
+            color: #FFE600;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 2.87-2.33-.3-4.36-2.35-4.66-4.68-.3-2.33.57-4.6 2.49-5.91 1.15-.81 2.54-1.27 3.94-1.35.66-.04 1.32-.07 1.99-.11.01-3.05.01-6.11.01-9.16.08-.02.16-.02.22-.02z"/>
+            </svg>
+        </div>
+
+        <h1>Mở TikTok</h1>
+        <p class="subtitle">Xem video trong ứng dụng TikTok</p>
+
+        <div class="buttons">
+            <button id="openExternalBtn" class="btn btn-primary">
+                <span id="btnText">Mở bằng trình duyệt</span>
+                <span id="btnLoading" class="loading hidden"></span>
+            </button>
+
+            <button id="copyLinkBtn" class="btn btn-secondary">
+                <span>📋</span>
+                Sao chép link
+            </button>
+        </div>
+
+        <div id="instructions" class="instructions hidden">
+            <strong>Hướng dẫn:</strong> Trong app Messenger/Instagram/TikTok, bấm vào 3 chấm (⋯) ở góc phải → <strong>Mở trong trình duyệt</strong> để tự động mở app TikTok.
+        </div>
+    </div>
+
+    <script>
+        // Analytics tracking
+        function trackEvent(eventName, data = {}) {
+            console.log('📊 Track:', eventName, data);
+
+            // You can integrate with Google Analytics, Facebook Pixel, etc.
+            // For now, just console log
+            if (typeof gtag !== 'undefined') {
+                gtag('event', eventName, {
+                    custom_parameter_1: data.browser_type || 'unknown',
+                    custom_parameter_2: data.user_agent || 'unknown'
+                });
+            }
+        }
+
+        // Detect browser environment
+        function detectBrowserEnvironment() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+            const isAndroid = /android/i.test(userAgent);
+
+            // Check for in-app browsers
+            const inAppPatterns = [
+                'FBAN', 'FBAV',     // Facebook
+                'Instagram',         // Instagram
+                'Messenger',         // Messenger
+                'Line',              // Line
+                'Twitter',          // Twitter
+                'WhatsApp',         // WhatsApp
+                'WeChat',           // WeChat
+                'Snapchat',         // Snapchat
+                'TikTok',           // TikTok in-app
+                'LinkedIn',         // LinkedIn
+                'Pinterest',        // Pinterest
+                'Reddit'            // Reddit
+            ];
+
+            const isInAppBrowser = inAppPatterns.some(pattern => userAgent.includes(pattern));
+
+            return {
+                isIOS,
+                isAndroid,
+                isInAppBrowser,
+                userAgent
+            };
+        }
+
+        // Get URL parameter
+        function getUrlParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Main logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const browserEnv = detectBrowserEnvironment();
+            const tiktokUrl = getUrlParam('url');
+
+            console.log('🌐 Browser environment:', browserEnv);
+            console.log('🔗 TikTok URL:', tiktokUrl);
+
+            trackEvent('view_go_page', {
+                browser_type: browserEnv.isInAppBrowser ? 'in_app' : 'external',
+                user_agent: browserEnv.userAgent.substring(0, 100),
+                url: tiktokUrl
+            });
+
+            // If no URL provided, redirect to TikTok app store
+            if (!tiktokUrl) {
+                console.warn('No TikTok URL provided');
+                window.location.href = browserEnv.isIOS
+                    ? 'https://apps.apple.com/app/tiktok/id835599320'
+                    : 'https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically';
+                return;
+            }
+
+            // Handle based on browser type
+            if (!browserEnv.isInAppBrowser) {
+                // External browser - auto redirect
+                console.log('🌐 External browser detected, auto-redirecting...');
+                trackEvent('auto_redirect_external', { url: tiktokUrl });
+
+                setTimeout(() => {
+                    window.location.href = tiktokUrl;
+                }, 500);
+                return;
+            }
+
+            // In-app browser - show landing page with options
+            console.log('📱 In-app browser detected, showing landing page');
+            document.getElementById('instructions').classList.remove('hidden');
+
+            // Setup button handlers
+            setupButtonHandlers(tiktokUrl, browserEnv);
+        });
+
+        function setupButtonHandlers(tiktokUrl, browserEnv) {
+            const openBtn = document.getElementById('openExternalBtn');
+            const copyBtn = document.getElementById('copyLinkBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoading = document.getElementById('btnLoading');
+
+            // Open external browser button
+            openBtn.addEventListener('click', function() {
+                console.log('🌐 Opening external browser...');
+                trackEvent('click_open_external_browser', { url: tiktokUrl });
+
+                // Show loading
+                btnText.textContent = 'Đang mở...';
+                btnLoading.classList.remove('hidden');
+
+                // Attempt to open external browser
+                openExternal(tiktokUrl, browserEnv);
+            });
+
+            // Copy link button
+            copyBtn.addEventListener('click', async function() {
+                console.log('📋 Copying link...');
+                trackEvent('click_copy_link', { url: tiktokUrl });
+
+                try {
+                    await navigator.clipboard.writeText(tiktokUrl);
+                    // Show feedback
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<span>✅</span> Đã sao chép!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                    }, 2000);
+                } catch (error) {
+                    console.error('Error copying to clipboard:', error);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = tiktokUrl;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<span>✅</span> Đã sao chép!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                    }, 2000);
+                }
+            });
+        }
+
+        // Build Chrome intent URL for Android
+        function buildChromeIntent(httpsUrl) {
+            const u = new URL(httpsUrl);
+            const fallback = encodeURIComponent(httpsUrl);
+            return `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
+        }
+
+        // Open external browser
+        function openExternal(httpsUrl, browserEnv) {
+            const ua = navigator.userAgent || '';
+            const isAndroid = /Android/i.test(ua);
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+            const isZalo = /Zalo/i.test(ua);
+            const isTikTokBrowser = /TikTok/i.test(ua);
+
+            console.log('🌐 Attempting to open external browser:', {
+                isAndroid, isIOS, isZalo, isTikTokBrowser, url: httpsUrl
+            });
+
+            // Special handling for Zalo browser
+            if (isZalo) {
+                console.log('📱 Zalo browser detected - using special handling');
+                trackEvent('zalo_browser_detected', { url: httpsUrl });
+
+                // Zalo browser often blocks intents, try multiple approaches
+                tryZaloRedirect(httpsUrl);
+                return;
+            }
+
+            // Special handling for TikTok in-app browser
+            if (isTikTokBrowser && !isAndroid && !isIOS) {
+                console.log('🎵 TikTok browser detected - using iframe method');
+                trackEvent('tiktok_browser_detected', { url: httpsUrl });
+
+                // TikTok browser blocks most redirects, use iframe
+                tryIframeRedirect(httpsUrl);
+                return;
+            }
+
+            if (isAndroid) {
+                // Android: attempt Chrome intent
+                try {
+                    const intentUrl = buildChromeIntent(httpsUrl);
+                    console.log('🤖 Android Chrome intent:', intentUrl);
+                    trackEvent('open_external_attempt_android', { intent_url: intentUrl });
+
+                    window.location.href = intentUrl;
+
+                    // Track success (best effort)
+                    setTimeout(() => {
+                        trackEvent('open_external_attempt_success', { platform: 'android' });
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('❌ Android intent failed:', error);
+                    // Fallback to direct URL
+                    window.location.href = httpsUrl;
+                }
+                return;
+            }
+
+            if (isIOS) {
+                // iOS: multiple attempts
+                try {
+                    console.log('🍎 iOS attempt with window.open');
+                    trackEvent('open_external_attempt_ios', { method: 'window_open' });
+
+                    const w = window.open(httpsUrl, '_blank');
+                    if (!w) {
+                        console.log('⚠️ window.open blocked, trying safari scheme');
+                        trackEvent('open_external_attempt_ios', { method: 'safari_scheme' });
+
+                        // Try Safari scheme
+                        window.location.href = `safari://open?url=${encodeURIComponent(httpsUrl)}`;
+
+                        // Fallback after delay
+                        setTimeout(() => {
+                            console.log('🔄 iOS fallback: direct redirect');
+                            window.location.href = httpsUrl;
+                        }, 1000);
+                    } else {
+                        trackEvent('open_external_attempt_success', { platform: 'ios' });
+                    }
+                } catch (error) {
+                    console.error('❌ iOS attempts failed:', error);
+                    // Final fallback
+                    window.location.href = httpsUrl;
+                }
+                return;
+            }
+
+            // Fallback for other platforms
+            console.log('🔄 Fallback: direct redirect');
+            trackEvent('open_external_attempt_fallback', { platform: 'unknown' });
+            window.location.href = httpsUrl;
+        }
+
+        // Special handling for Zalo browser
+        function tryZaloRedirect(url) {
+            console.log('🇻🇳 Trying Zalo-specific redirect methods');
+
+            // Method 1: Try direct window.location (sometimes works)
+            try {
+                window.location.href = url;
+                console.log('✅ Zalo method 1: Direct redirect');
+            } catch (e) {
+                console.log('❌ Zalo method 1 failed');
+            }
+
+            // Method 2: Try iframe (may trigger app)
+            setTimeout(() => {
+                tryIframeRedirect(url);
+            }, 500);
+
+            // Method 3: Try popup (if allowed)
+            setTimeout(() => {
+                try {
+                    const popup = window.open(url, '_blank', 'width=1,height=1');
+                    if (popup) {
+                        console.log('✅ Zalo method 3: Popup successful');
+                        setTimeout(() => {
+                            if (popup && !popup.closed) popup.close();
+                        }, 1000);
+                    } else {
+                        console.log('❌ Zalo method 3: Popup blocked');
+                        // Show Zalo-specific instructions
+                        showZaloInstructions(url);
+                    }
+                } catch (e) {
+                    console.log('❌ Zalo method 3 failed');
+                    showZaloInstructions(url);
+                }
+            }, 1000);
+        }
+
+        // Iframe redirect for restricted browsers
+        function tryIframeRedirect(url) {
+            try {
+                console.log('📱 Trying iframe redirect');
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.style.width = '1px';
+                iframe.style.height = '1px';
+                iframe.src = url;
+                document.body.appendChild(iframe);
+
+                // Clean up
+                setTimeout(() => {
+                    if (iframe.parentNode) {
+                        iframe.parentNode.removeChild(iframe);
+                    }
+                }, 3000);
+
+                console.log('✅ Iframe redirect attempted');
+            } catch (error) {
+                console.log('❌ Iframe redirect failed:', error);
+            }
+        }
+
+        // Special instructions for Zalo browser
+        function showZaloInstructions(url) {
+            console.log('📱 Showing Zalo-specific instructions');
+
+            // Check if already exists
+            if (document.getElementById('zaloInstructions')) {
+                return;
+            }
+
+            const instructions = document.createElement('div');
+            instructions.id = 'zaloInstructions';
+            instructions.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4';
+            instructions.innerHTML = `
+                <div class="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-3xl text-blue-600">info</span>
+                        </div>
+                        <h3 class="text-lg font-bold mb-4">Hướng dẫn mở TikTok</h3>
+                        <p class="text-sm text-gray-600 mb-6">
+                            Trong Zalo, hãy bấm vào 3 chấm (⋯) ở góc phải → <strong>Copy link</strong>, sau đó dán vào Chrome/Safari để mở.
+                        </p>
+                        <div class="flex gap-3">
+                            <button class="flex-1 bg-gray-200 py-3 rounded-lg text-sm font-medium" onclick="this.closest('.fixed').remove()">
+                                Bỏ qua
+                            </button>
+                            <button class="flex-1 bg-primary text-white py-3 rounded-lg text-sm font-bold" onclick="copyLinkAndClose('${url}')">
+                                Copy Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(instructions);
+
+            // Auto-remove after 15 seconds
+            setTimeout(() => {
+                if (instructions.parentNode) {
+                    instructions.remove();
+                }
+            }, 15000);
+        }
+
+        // Copy link and close modal
+        function copyLinkAndClose(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                console.log('✅ Link copied for Zalo user');
+                trackEvent('zalo_copy_link_success', { url });
+
+                // Show feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Đã copy!';
+                btn.style.background = '#10B981';
+
+                setTimeout(() => {
+                    document.getElementById('zaloInstructions').remove();
+                }, 1000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = url;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                const btn = event.target;
+                btn.textContent = '✅ Đã copy!';
+                btn.style.background = '#10B981';
+
+                setTimeout(() => {
+                    document.getElementById('zaloInstructions').remove();
+                }, 1000);
+            });
+        }
+
+        async function tryDeepLink(url, browserEnv) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // For iOS, try Universal Link
+                    if (browserEnv.isIOS) {
+                        // iOS Universal Link for TikTok
+                        window.location.href = url;
+                    }
+                    // For Android, try intent
+                    else if (browserEnv.isAndroid) {
+                        // Android intent for TikTok
+                        window.location.href = `intent://tiktok.com${new URL(url).pathname}#Intent;scheme=https;package=com.zhiliaoapp.musically;end`;
+                    }
+
+                    // Resolve after a short delay
+                    setTimeout(() => {
+                        resolve();
+                    }, 500);
+
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trang chủ - Mẹ Audi</title>
+<link rel="icon" href="logo/nuttency_96.png" type="image/png"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Firebase SDK -->
+<script>
+// Function to go back to edit page (globally accessible)
+function goBackToEdit() {
+    console.log('🔙 Going back to edit page...');
+    window.location.href = 'edit0503.html';
+}
+</script>
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBk0GLruKL0GiU_ZZcL8p5O6PtswWapEHE",
+    authDomain: "nhixinhne-a39e2.firebaseapp.com",
+    projectId: "nhixinhne-a39e2",
+    storageBucket: "nhixinhne-a39e2.firebasestorage.app",
+    messagingSenderId: "677175421970",
+    appId: "1:677175421970:web:9aa74f064d02f49537fccb",
+    measurementId: "G-H363JEFJ8P"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+
+  // Initialize Firestore
+  const db = getFirestore(app);
+
+  // Make db available globally
+  window.db = db;
+  window.doc = doc;
+  window.getDoc = getDoc;
+  window.setDoc = setDoc;
+
+// Load data directly from Firebase when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if coming from edit0503.html
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('from') === 'edit0503') {
+        document.getElementById('backButton').classList.remove('hidden');
+    }
+
+    loadAllData();
+});
+
+// Load both config and categories data from Firebase
+async function loadAllData() {
+    console.log('🌐 Loading all site data from Firebase...');
+
+    try {
+        // Load config data (profile + background)
+        const profileDoc = await getDoc(doc(db, 'config', 'profile'));
+        const backgroundDoc = await getDoc(doc(db, 'config', 'background'));
+
+        const profile = profileDoc.exists ? profileDoc.data() : {
+            name: "Mẹ Bắp Review",
+            bio: "Chia sẻ bí quyết và deal hot cho bé yêu 🍼✨",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuD4-4nseipxqo0kUCZE9uFM44MdTSYdXZK7Ip6KdlyymxoMUAFfS7Ve06-Q9hHGxjPluC6X1APdZdN4rucbf81eaxjkm_YhmgvFAXw4pcASA-ix8llEXZC5nUN6SacEV2XF_k-dtb9Yva94yHVEtkau6hvENT-rlCm-EdLda-wSIKp47tOJkZDAYu-1VrHNM-2ra5qRFgsaqhl86noxOuc2f75yKQwk7z-_QUC1XkJ0rEhR3XHAN6BLxLkkhAlcI2nDPjqbfeDSZ3h2"
+        };
+
+        const background = backgroundDoc.exists ? backgroundDoc.data() : {
+            imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuC8aAcLjxpyVZyPCmL72kiLClze8F-26nZRzXjNA-qmY4h-RzSJhNeTrZLXfhEr5bEkoErKSv2uzqv6I_Z1c0WGToWBBo8lmLUNeAu_LDe-B6S3W7w34pYYpdPQrqxAz8xq3TpZqdZYGIbp69Ua_oGY5QBQh5-87_vbnvnV7ZBjOqxAz-WTUZIAhSwh7ZlLA7pHlcbVbQ-UyX1jMuk4iQ_-RC6DX9nJz-Q_qINfaQcsZmJBDXDCP-yJdKV9S66Jyooe_Tw2Che6pEPO"
+        };
+
+        console.log('✅ Config data loaded from Firebase');
+
+        // Load categories data
+        const categoriesSnapshot = await getDocs(collection(db, 'categories'));
+        const categories = [];
+
+        categoriesSnapshot.forEach(doc => {
+            categories.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+
+        // Sort by created date or custom order if available
+        categories.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+        console.log('✅ Categories data loaded from Firebase');
+
+        // Combine data for compatibility
+        siteData = {
+            profile: profile,
+            backgroundImage: background.imageUrl,
+            categories: categories
+        };
+
+        console.log('🎉 All data loaded successfully from Firebase');
+        updatePageContent();
+
+        // Hide splash screen after data is loaded
+        setTimeout(() => {
+            const splashScreen = document.getElementById('splashScreen');
+            if (splashScreen) {
+                splashScreen.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    splashScreen.style.display = 'none';
+                }, 300); // Wait for fade out animation
+            }
+            console.log('🚀 Splash screen hidden - App ready!');
+        }, 500); // Small delay for smooth transition
+
+    } catch (error) {
+        console.error('❌ Error loading site data from Firebase:', error);
+
+        // Use default data on error
+        siteData = {
+            profile: {
+                name: "Mẹ Bắp Review",
+                bio: "Chia sẻ bí quyết và deal hot cho bé yêu 🍼✨",
+                avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuC-U4NtuOUDHAYfOtCxgSYY1QgP3qflstHo0DUfVC9ioLcCbHwvmMBsnzsaj67yumetumdfLoM7Mfdin-52tlvzJYIa92QhY8obDG8vW9eEmi-zVgphprqQxDhHUvngzyuOPtrZbL9dWVkXYqIFU0516KFXZ_VvzWhMkeww1joQXePvEyCIZbWZLvahU38WEbuINyrX91Dj0D_ejXg9Kh3e1CLQcf-eA9av98wXWXNWQWXPM1z3amluP3IRrzspo4BxSWI9Ml8Y32aT"
+            },
+            backgroundImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuC8aAcLjxpyVZyPCmL72kiLClze8F-26nZRzXjNA-qmY4h-RzSJhNeTrZLXfhEr5bEkoErKSv2uzqv6I_Z1c0WGToWBBo8lmLUNeAu_LDe-B6S3W7w34pYYpdPQrqxAz8xq3TpZqdZYGIbp69Ua_oGY5QBQh5-87_vbnvnV7ZBjOqxAz-WTUZIAhSwh7ZlLA7pHlcbVbQ-UyX1jMuk4iQ_-RC6DX9nJz-Q_qINfaQcsZmJBDXDCP-yJdKV9S66Jyooe_Tw2Che6pEPO",
+            categories: []
+        };
+
+        updatePageContent();
+    }
+}
+</script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#bba47b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221016",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "1.5rem", "xl": "2rem", "2xl": "2.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        @font-face {
+            font-family: 'Pacifico';
+            src: url('fonts/ICIEL-Pacifico.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* Custom Scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Smooth fade in */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-slate-900 dark:text-slate-50 font-display transition-colors duration-200">
+<!-- Back Button (only shown when coming from edit0503) -->
+<div id="backButton" class="fixed top-4 left-4 z-[60] hidden">
+  <button onclick="goBackToEdit()" class="bg-black/20 backdrop-blur-sm text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-black/30 transition-colors">
+    <span class="material-symbols-outlined text-xl">arrow_back</span>
+  </button>
+</div>
+<!-- Splash Screen -->
+<div id="splashScreen" class="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center">
+  <div class="text-center">
+    <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Đang tải...</h2>
+  </div>
+</div>
+<div class="relative flex h-full w-full max-w-md mx-auto flex-col group/design-root overflow-x-hidden shadow-2xl bg-white dark:bg-slate-900 min-h-screen">
+<!-- Profile Header -->
+<div class="flex p-4 flex-col gap-4 items-center pt-8 pb-6 bg-gradient-to-b from-primary/5 to-transparent dark:from-primary/10 fade-in">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-28 border-4 border-white dark:border-slate-800 shadow-lg" data-alt="Close up portrait of a happy asian mother holding her baby" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC-U4NtuOUDHAYfOtCxgSYY1QgP3qflstHo0DUfVC9ioLcCbHwvmMBsnzsaj67yumetumdfLoM7Mfdin-52tlvzJYIa92QhY8obDG8vW9eEmi-zVgphprqQxDhHUvngzyuOPtrZbL9dWVkXYqIFU0516KFXZ_VvzWhMkeww1joQXePvEyCIZbWZLvahU38WEbuINyrX91Dj0D_ejXg9Kh3e1CLQcf-eA9av98wXWXNWQWXPM1z3amluP3IRrzspo4BxSWI9Ml8Y32aT");'>
+</div>
+<div class="flex flex-col items-center justify-center gap-4">
+<div class="flex items-center gap-1.5">
+<p class="text-[#4e342e] text-[32px] font-bold leading-tight tracking-tight text-center" style="font-family: 'Pacifico', cursive;"></p>
+<span class="material-symbols-outlined text-blue-500 text-[20px]" title="Verified">verified</span>
+</div>
+<p class="text-white text-[28px] text-base font-medium leading-normal text-center max-w-[280px]"></p>
+</div>
+</div>
+<!-- Featured Card (Key Product) -->
+<div class="px-4 pb-4 @container fade-in" style="animation-delay: 0.1s;" id="featuredCard">
+<!-- Featured card will be dynamically generated -->
+</div>
+<!-- Categories Headline -->
+<div class="px-4 pb-2 pt-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="color: #4e342e;">category</span>
+<h2 class="text-white text-xl font-bold leading-tight">Danh Mục Sản Phẩm</h2>
+</div>
+</div>
+<!-- Category List - Will be populated by JavaScript -->
+<div class="flex flex-col gap-3 px-4 pb-8" id="categoriesContainer">
+<!-- Categories will be loaded from backend -->
+</div>
+<!-- Footer / Contact Action -->
+<div class="mt-auto p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+<a href="https://zalo.me/0843653353" target="_blank">
+    <button class="flex w-full cursor-pointer items-center justify-center rounded-xl h-12 px-4 border-2 border-primary text-primary hover:bg-[#C9B695] text-base hover:text-white font-bold leading-normal transition-colors">
+    <span class="material-symbols-outlined mr-2">mail</span>
+                    Liên hệ hợp tác
+                </button>
+            </a>
+<p class="text-center text-slate-400 text-[8px] mt-4">© 2026 Mẹ Nhí Affiliate. dev by Nuttency</p>
+</div>
+<!-- Modal Backdrop -->
+<div id="modalBackdrop" class="fixed inset-0 bg-black/50 z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
+<!-- Bottom Sheet Modal -->
+<div id="bottomSheet" class="fixed inset-x-0 bottom-0 z-50 h-[64vh] flex flex-col transform translate-y-full transition-transform duration-300 ease-out bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl max-w-md mx-auto">
+<div class="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 pb-3 border-b border-slate-100 dark:border-slate-800 rounded-t-3xl">
+<!-- Default Header -->
+<div id="headerDefault" class="flex items-center justify-between">
+<button id="closeModal" class="text-slate-700 dark:text-slate-200 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+<div class="flex flex-col flex-1 px-4 text-center">
+<h2 id="categoryTitle" class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] truncate">Danh Mục Sản Phẩm</h2>
+<span id="productCount" class="text-xs text-slate-500 font-medium">0 sản phẩm</span>
+</div>
+<button id="searchBtn" class="text-slate-700 dark:text-slate-200 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[24px]">search</span>
+</button>
+</div>
+
+<!-- Search Header -->
+<div id="headerSearch" class="flex items-center justify-between hidden">
+<button id="searchIcon" class="text-slate-700 dark:text-slate-200 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[24px]">search</span>
+</button>
+<input id="searchInput" type="text" placeholder="Tìm kiếm sản phẩm..." class="flex-1 mx-4 bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:shadow-none text-slate-900 dark:text-white placeholder-slate-400">
+<button id="closeSearch" class="text-slate-700 dark:text-slate-200 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto">
+<div class="grid grid-cols-2 gap-4 p-4 pb-8" id="productsGrid">
+<!-- Products will be loaded dynamically -->
+</div>
+</div>
+</div>
+<script>
+// Global variables
+let siteData = null;
+
+// Old function removed - using loadAllData() instead
+
+// Update page content with loaded data
+function updatePageContent() {
+    if (!siteData) return;
+
+    // Update profile
+    const profileName = document.querySelector('.text-center[style*="Pacifico"]');
+    const profileBio = document.querySelector('.text-center.max-w-\\[280px\\]');
+    const profileAvatar = document.querySelector('.rounded-full.size-28');
+
+    if (profileName && siteData.profile.name) {
+        profileName.textContent = siteData.profile.name;
+    }
+    if (profileBio && siteData.profile.bio) {
+        profileBio.textContent = siteData.profile.bio;
+    }
+    if (profileAvatar && siteData.profile.avatar) {
+        profileAvatar.style.backgroundImage = `url("${siteData.profile.avatar}")`;
+    }
+
+    // Update background image for main frame with responsive scaling
+    const mainFrame = document.querySelector('.group\\/design-root');
+    if (mainFrame && siteData.backgroundImage) {
+        mainFrame.style.backgroundImage = `url("${siteData.backgroundImage}")`;
+        mainFrame.style.backgroundSize = 'cover'; // Auto scale to fit container
+        mainFrame.style.backgroundPosition = 'center';
+        mainFrame.style.backgroundRepeat = 'no-repeat';
+        // Remove fixed attachment for better mobile experience
+        mainFrame.style.backgroundAttachment = window.innerWidth > 768 ? 'fixed' : 'scroll';
+        console.log('🎨 Background image updated for main frame (responsive):', siteData.backgroundImage);
+    }
+
+    // Update featured card with key product
+    updateFeaturedCard();
+
+    // Update categories
+    const categoriesContainer = document.getElementById('categoriesContainer');
+    if (categoriesContainer && siteData.categories) {
+        categoriesContainer.innerHTML = '';
+
+        siteData.categories.forEach((category, index) => {
+            const categoryBtn = document.createElement('button');
+            categoryBtn.className = 'group flex items-center gap-4 bg-primary p-3 pr-4 rounded-xl shadow-sm border border-white/20 hover:bg-primary/80 transition-all active:scale-[0.98] fade-in open-modal';
+            categoryBtn.style.animationDelay = `${0.2 + index * 0.1}s`;
+            categoryBtn.setAttribute('data-category', category.name);
+
+            categoryBtn.innerHTML = `
+                <div class="text-white flex items-center justify-center rounded-xl bg-white/20 shrink-0 size-12 group-hover:bg-white/30 transition-colors">
+                    <span class="material-symbols-outlined">${category.icon}</span>
+                </div>
+                <div class="flex flex-col flex-1">
+                    <p class="text-[#4e342e] text-base font-bold leading-tight">${category.name}</p>
+                    <p class="text-white/80 text-xs">${category.description}</p>
+                </div>
+                <div class="shrink-0 text-white/80 group-hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </div>
+            `;
+
+            categoriesContainer.appendChild(categoryBtn);
+        });
+    }
+
+    // Re-initialize modal functionality
+    initializeModal();
+}
+
+// Update featured card with key product
+function updateFeaturedCard() {
+    const featuredCardContainer = document.getElementById('featuredCard');
+    if (!featuredCardContainer) return;
+
+    // Find key product across all categories
+    let keyProduct = null;
+    let keyCategory = null;
+
+    for (const category of siteData.categories || []) {
+        const found = category.products?.find(product => product.isKey);
+        if (found) {
+            keyProduct = found;
+            keyCategory = category;
+            break;
+        }
+    }
+
+    if (keyProduct) {
+        console.log('🎯 Key product found:', keyProduct.name, 'in category:', keyCategory.name);
+
+        // Create featured card
+        const featuredCard = document.createElement('div');
+        featuredCard.className = 'flex flex-col items-stretch justify-start rounded-2xl shadow-lg shadow-pink-100 dark:shadow-none bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 overflow-hidden transform transition-transform hover:scale-[1.01]';
+
+        featuredCard.innerHTML = `
+            <div class="relative w-full h-48 bg-center bg-no-repeat bg-cover">
+                ${keyProduct.image
+                    ? `<div class="w-full h-full bg-center bg-no-repeat bg-cover" style='background-image: url("${keyProduct.image}");'></div>`
+                    : '<div class="w-full h-full bg-gradient-to-br from-blue-50 to-pink-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center"><span class="material-symbols-outlined text-6xl text-blue-200">shopping_bag</span></div>'
+                }
+                <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm animate-pulse">
+                    MUA NHIỀU
+                </div>
+            </div>
+            <div class="flex w-full grow flex-col items-stretch justify-center gap-2 p-4">
+                <p class="text-slate-900 dark:text-white text-lg font-bold leading-tight">${keyProduct.name}</p>
+                <div class="flex flex-col gap-3">
+                    <button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-primary hover:bg-[#D8D8D4] active:bg-[#D8D8D4] text-white text-sm font-bold leading-normal transition-colors shadow-md shadow-[#D8D8D4] dark:shadow-none key-product-btn" data-link="${keyProduct.link}">
+                        <span class="truncate mr-2">Xem Ngay</span>
+                        <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Add click handler for the button
+        const keyBtn = featuredCard.querySelector('.key-product-btn');
+        if (keyBtn) {
+            keyBtn.addEventListener('click', () => {
+                const link = keyBtn.getAttribute('data-link');
+                if (link) {
+                    openSmartLink(link);
+                }
+            });
+        }
+
+        featuredCardContainer.innerHTML = '';
+        featuredCardContainer.appendChild(featuredCard);
+
+    } else {
+        console.log('⚠️ No key product found, hiding featured card');
+        featuredCardContainer.innerHTML = '';
+    }
+}
+
+function initializeModal() {
+    const modal = document.getElementById('bottomSheet');
+    const backdrop = document.getElementById('modalBackdrop');
+    const closeBtn = document.getElementById('closeModal');
+    const searchBtn = document.getElementById('searchBtn');
+    const categoryTitle = document.getElementById('categoryTitle');
+    const productCount = document.getElementById('productCount');
+    const openButtons = document.querySelectorAll('.open-modal');
+
+    let currentCategoryProducts = [];
+    let isSearchMode = false;
+
+    // Header elements
+    const headerDefault = document.getElementById('headerDefault');
+    const headerSearch = document.getElementById('headerSearch');
+    const searchInput = document.getElementById('searchInput');
+    const closeSearchBtn = document.getElementById('closeSearch');
+
+    // Open modal function
+    function openModal(categoryName) {
+        const category = siteData.categories.find(c => c.name === categoryName);
+        if (!category) return;
+
+        categoryTitle.textContent = categoryName;
+        currentCategoryProducts = category.products.filter(p => p.visible);
+
+        // Update product count
+        const count = currentCategoryProducts.length;
+        productCount.textContent = `${count} sản phẩm`;
+
+        // Update modal products
+        updateProductsDisplay(currentCategoryProducts);
+
+        // Show backdrop and modal
+        backdrop.classList.remove('opacity-0', 'pointer-events-none');
+        backdrop.classList.add('opacity-100');
+        modal.classList.remove('translate-y-full');
+
+        // Lock body scroll
+        document.body.style.overflow = 'hidden';
+        isSearchMode = false;
+        exitSearchMode(); // Ensure default header is shown
+
+        console.log('🚀 Modal opened for category:', categoryName);
+    }
+
+    // Close modal function
+    function closeModal() {
+        console.log('🔴 Closing modal');
+
+        // Hide modal with transition
+        modal.classList.add('translate-y-full');
+
+        // Backdrop keeps pointer-events for ~350ms to prevent click-through
+        setTimeout(() => {
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+
+            // Disable pointer-events after fade out
+            setTimeout(() => {
+                backdrop.classList.add('pointer-events-none');
+                document.body.style.overflow = 'auto';
+                isSearchMode = false;
+                exitSearchMode(); // Reset to default header
+                console.log('✅ Modal fully closed');
+            }, 300); // Wait for backdrop fade out
+        }, 50); // Small delay to ensure modal starts hiding
+    }
+
+    // Enter search mode
+    function enterSearchMode() {
+        console.log('🔍 Entering search mode');
+        headerDefault.classList.add('hidden');
+        headerSearch.classList.remove('hidden');
+        isSearchMode = true;
+
+        // Focus input to trigger mobile keyboard
+        requestAnimationFrame(() => {
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.value = ''; // Clear any previous search
+                // Set cursor at end for better UX
+                searchInput.setSelectionRange(0, 0);
+
+                // Additional iOS keyboard trigger
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    searchInput.click();
+                }
+            }
+        });
+    }
+
+    // Exit search mode
+    function exitSearchMode() {
+        console.log('❌ Exiting search mode');
+        headerSearch.classList.add('hidden');
+        headerDefault.classList.remove('hidden');
+        isSearchMode = false;
+
+        // Clear search and show all products
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        updateProductsDisplay(currentCategoryProducts);
+    }
+
+    // Open modal event listeners
+    openButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const categoryName = this.getAttribute('data-category');
+            openModal(categoryName);
+        });
+    });
+
+    // Close modal event listeners
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal();
+        });
+    }
+
+    // Click backdrop to close
+    if (backdrop) {
+        backdrop.addEventListener('click', function(e) {
+            if (e.target === backdrop) {
+                console.log('🌫️ Backdrop clicked - closing modal');
+                closeModal();
+            }
+        });
+    }
+
+    // Search button - enter search mode
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            enterSearchMode();
+        });
+    }
+
+    // Close search button - exit search mode
+    if (closeSearchBtn) {
+        closeSearchBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            exitSearchMode();
+        });
+    }
+
+    // Search input - realtime filtering
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            console.log('🔎 Searching for:', query);
+
+            if (query === '') {
+                // Show all products when search is empty
+                updateProductsDisplay(currentCategoryProducts);
+            } else {
+                // Filter products
+                const filteredProducts = currentCategoryProducts.filter(product =>
+                    product.name.toLowerCase().includes(query)
+                );
+                updateProductsDisplay(filteredProducts);
+            }
+        });
+    }
+
+    function updateProductsDisplay(products) {
+        const productsGrid = document.getElementById('productsGrid');
+        if (!productsGrid) return;
+
+        productsGrid.innerHTML = '';
+
+        if (products.length === 0) {
+            productsGrid.innerHTML = `
+                <div class="col-span-2 text-center py-8 text-gray-500">
+                    <span class="material-symbols-outlined text-4xl mb-2 block">inventory_2</span>
+                    ${searchMode ? 'Không tìm thấy sản phẩm' : 'Chưa có sản phẩm nào trong danh mục này'}
+                </div>
+            `;
+        } else {
+            products.forEach(product => {
+                const productCard = document.createElement('a');
+                productCard.className = 'group flex flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-lg hover:shadow-pink-100 dark:hover:shadow-none transition-all duration-300 fade-in';
+                productCard.href = product.link || '#';
+                productCard.target = '_blank';
+                productCard.rel = 'noopener noreferrer';
+                productCard.style.textDecoration = 'none';
+
+                productCard.innerHTML = `
+                    <div class="relative w-full aspect-square bg-slate-50 dark:bg-slate-700 overflow-hidden">
+                        ${product.image ? `<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" style='background-image: url("${product.image}")'></div>` : '<div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-pink-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-blue-200">shopping_bag</span></div>'}
+                    </div>
+                    <div class="p-3">
+                        <h3 class="text-slate-900 dark:text-white text-sm font-bold line-clamp-2 leading-snug">${product.name}</h3>
+                    </div>
+                `;
+
+                // Add click handler to override default behavior for smart redirect
+                if (product.link) {
+                    productCard.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        openSmartLink(product.link);
+                    });
+                }
+
+                productsGrid.appendChild(productCard);
+            });
+        }
+    }
+
+    function showSearchInput() {
+        // Create search input overlay
+        const searchOverlay = document.createElement('div');
+        searchOverlay.className = 'fixed inset-0 bg-black/50 z-60 flex items-start justify-center pt-20';
+        searchOverlay.innerHTML = `
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 mx-4 w-full max-w-sm shadow-2xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="material-symbols-outlined text-primary">search</span>
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm..." class="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400">
+                    <button id="closeSearch" class="text-gray-400 hover:text-gray-600">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(searchOverlay);
+
+        const searchInput = document.getElementById('searchInput');
+        const closeSearch = document.getElementById('closeSearch');
+
+        searchInput.focus();
+
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const filteredProducts = currentCategoryProducts.filter(product =>
+                product.name.toLowerCase().includes(query)
+            );
+            updateProductsDisplay(filteredProducts);
+        });
+
+        closeSearch.addEventListener('click', function() {
+            document.body.removeChild(searchOverlay);
+            updateProductsDisplay(currentCategoryProducts);
+            searchMode = false;
+            searchBtn.innerHTML = '<span class="material-symbols-outlined text-[24px]">search</span>';
+        });
+
+        searchOverlay.addEventListener('click', function(e) {
+            if (e.target === searchOverlay) {
+                document.body.removeChild(searchOverlay);
+                updateProductsDisplay(currentCategoryProducts);
+                searchMode = false;
+                searchBtn.innerHTML = '<span class="material-symbols-outlined text-[24px]">search</span>';
+            }
+        });
+    }
+}
+
+// Smart link opening function to bypass in-app browser limitations
+function openSmartLink(url) {
+    console.log('🔗 Attempting to open smart link:', url);
+
+    // Convert to deep link if possible
+    const deepLink = convertToDeepLink(url);
+    console.log('🔄 Converted to deep link:', deepLink);
+
+    // Check if it's an in-app browser
+    const isInApp = isInAppBrowser();
+    console.log('📱 Is in-app browser:', isInApp);
+
+    if (isInApp) {
+        // Try multiple fallback methods for in-app browsers
+        tryMultipleRedirects(deepLink);
+    } else {
+        // Standard browsers - use direct redirect (supports deep links)
+        window.location.href = deepLink;
+    }
+}
+
+// Convert web URLs to deep links when possible
+function convertToDeepLink(url) {
+    try {
+        // TikTok - force open in system browser
+        if (url.includes('tiktok.com') || url.includes('vt.tiktok.com') || url.includes('vm.tiktok.com')) {
+            console.log('🎵 TikTok link detected, forcing system browser redirect');
+
+            // Create a special URL that will force system browser
+            const systemBrowserUrl = createSystemBrowserRedirect(url);
+            console.log('🌐 System browser redirect URL:', systemBrowserUrl);
+            return systemBrowserUrl;
+        }
+
+        // Shopee deep link (already working)
+        if (url.includes('shopee.vn') || url.includes('shopee.com') || url.includes('shp.ee')) {
+            console.log('🛒 Shopee link detected, using web URL (works well)');
+            return url;
+        }
+
+        // Other platforms - use as-is
+        return url;
+
+    } catch (error) {
+        console.error('❌ Error converting to deep link:', error);
+        return url; // Fallback to original URL
+    }
+}
+
+// Create system browser redirect URL
+function createSystemBrowserRedirect(url) {
+    const userAgent = navigator.userAgent;
+
+    // iOS - use safari://open
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        return `safari://open?url=${encodeURIComponent(url)}`;
+    }
+
+    // Android - use intent
+    if (/android/i.test(userAgent)) {
+        return `intent:${url}#Intent;scheme=https;package=com.android.chrome;end`;
+    }
+
+    // Fallback for other devices
+    return url;
+}
+
+// Detect in-app browsers
+function isInAppBrowser() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+    // iOS detection
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        // Check for in-app browsers
+        return /FBAN|FBAV|Instagram|Messenger|Line|Twitter|WhatsApp|WeChat|Snapchat|TikTok|LinkedIn|Pinterest|Reddit/.test(userAgent);
+    }
+
+    // Android detection
+    if (/android/i.test(userAgent)) {
+        return /FBAN|FBAV|Instagram|Messenger|Line|Twitter|WhatsApp|WeChat|Snapchat|TikTok|LinkedIn|Pinterest|Reddit|wv|Version\/[\d\.]+/.test(userAgent);
+    }
+
+    return false;
+}
+
+// Try multiple redirect methods for in-app browsers
+function tryMultipleRedirects(url) {
+    console.log('🔄 Trying multiple redirect methods for in-app browser');
+
+    // Method 1: Try iframe redirect first (most effective for in-app browsers)
+    try {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.style.width = '1px';
+        iframe.style.height = '1px';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+        console.log('✅ Method 1: Iframe redirect attempted');
+
+        // Clean up after 3 seconds
+        setTimeout(() => {
+            if (iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+        }, 3000);
+    } catch (e) {
+        console.log('❌ Method 1 failed:', e);
+    }
+
+    // Method 2: Try direct window.location.href
+    setTimeout(() => {
+        try {
+            window.location.href = url;
+            console.log('✅ Method 2: Direct redirect attempted');
+        } catch (e) {
+            console.log('❌ Method 2 failed:', e);
+        }
+    }, 500);
+
+    // Method 3: Try popup window (last resort)
+    setTimeout(() => {
+        try {
+            const popup = window.open(url, '_blank', 'width=1,height=1,left=0,top=0');
+            if (popup) {
+                console.log('✅ Method 3: Popup window successful');
+                // Close popup after 1 second
+                setTimeout(() => {
+                    if (popup && !popup.closed) {
+                        popup.close();
+                    }
+                }, 1000);
+            } else {
+                console.log('⚠️ Method 3: Popup blocked');
+                showBrowserWarning(url);
+            }
+        } catch (e) {
+            console.log('❌ Method 3 failed:', e);
+            showBrowserWarning(url);
+        }
+    }, 1000);
+
+    // Method 4: Try meta refresh redirect (final fallback)
+    setTimeout(() => {
+        try {
+            const meta = document.createElement('meta');
+            meta.httpEquiv = 'refresh';
+            meta.content = `0;url=${url}`;
+            document.head.appendChild(meta);
+            console.log('✅ Method 4: Meta refresh attempted');
+
+            // Clean up meta tag
+            setTimeout(() => {
+                if (meta.parentNode) {
+                    meta.parentNode.removeChild(meta);
+                }
+            }, 1000);
+        } catch (e) {
+            console.log('❌ Method 4 failed:', e);
+        }
+    }, 1500);
+}
+
+// Show warning when in-app browser detected
+function showBrowserWarning(url) {
+    console.log('⚠️ Showing browser warning for URL:', url);
+
+    // Check if warning already exists
+    if (document.getElementById('browserWarning')) {
+        return;
+    }
+
+    const warning = document.createElement('div');
+    warning.id = 'browserWarning';
+    warning.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4';
+    warning.innerHTML = `
+        <div class="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-2xl">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-3xl text-blue-600">open_in_browser</span>
+                </div>
+                <h3 class="text-lg font-bold mb-4">Mở trong trình duyệt</h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Để trải nghiệm tốt nhất, vui lòng mở link này trong Safari hoặc Chrome.
+                </p>
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-gray-200 py-3 rounded-lg text-sm font-medium" onclick="this.closest('.fixed').remove()">
+                        Bỏ qua
+                    </button>
+                    <button class="flex-1 bg-primary text-white py-3 rounded-lg text-sm font-bold" onclick="openInSystemBrowser('${url}')">
+                        Mở Safari
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(warning);
+
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (warning.parentNode) {
+            warning.remove();
+        }
+    }, 10000);
+}
+
+// Open URL in system browser
+function openInSystemBrowser(url) {
+    console.log('🌐 Opening in system browser:', url);
+
+    // Remove warning
+    const warning = document.getElementById('browserWarning');
+    if (warning) {
+        warning.remove();
+    }
+
+    // iOS Safari redirect
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // Try multiple iOS redirect methods
+        trySafariRedirect(url);
+    } else {
+        // Android Chrome redirect
+        tryAndroidRedirect(url);
+    }
+}
+
+// iOS Safari redirect methods
+function trySafariRedirect(url) {
+    // Method 1: Safari scheme
+    try {
+        window.location.href = `safari://open?url=${encodeURIComponent(url)}`;
+    } catch (e) {
+        console.log('Safari scheme failed, trying alternative');
+    }
+
+    // Method 2: Fallback to window.open
+    setTimeout(() => {
+        try {
+            window.open(url, '_blank');
+        } catch (e) {
+            console.log('All iOS redirect methods failed');
+            // Show final fallback
+            showFallbackLink(url);
+        }
+    }, 500);
+}
+
+// Android Chrome redirect methods
+function tryAndroidRedirect(url) {
+    // Method 1: Chrome intent
+    try {
+        window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end`;
+    } catch (e) {
+        console.log('Chrome intent failed, trying alternatives');
+    }
+
+    // Method 2: Fallback to window.open
+    setTimeout(() => {
+        try {
+            window.open(url, '_blank');
+        } catch (e) {
+            console.log('All Android redirect methods failed');
+            // Show final fallback
+            showFallbackLink(url);
+        }
+    }, 500);
+}
+
+// Final fallback - show clickable link
+function showFallbackLink(url) {
+    console.log('📋 Showing fallback link');
+
+    const fallback = document.createElement('div');
+    fallback.className = 'fixed bottom-4 left-4 right-4 bg-white rounded-lg p-4 shadow-lg border z-50';
+    fallback.innerHTML = `
+        <div class="flex items-center justify-between">
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">Nhấn để mở sản phẩm</p>
+                <p class="text-xs text-gray-500 truncate">${url}</p>
+            </div>
+            <button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold ml-3" onclick="window.open('${url}', '_blank'); this.closest('.fixed').remove();">
+                Mở
+            </button>
+        </div>
+        <button class="absolute top-2 right-2 text-gray-400" onclick="this.closest('.fixed').remove()">
+            <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+    `;
+
+    document.body.appendChild(fallback);
+
+    // Auto-remove after 15 seconds
+    setTimeout(() => {
+        if (fallback.parentNode) {
+            fallback.remove();
+        }
+    }, 15000);
+}
+</script>
+</body></html>

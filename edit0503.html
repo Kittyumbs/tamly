@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản Lý Trang Bio</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- SortableJS for drag-and-drop functionality -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<!-- Google API Client -->
+<script src="https://apis.google.com/js/api.js"></script>
+<!-- Firebase SDK -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBk0GLruKL0GiU_ZZcL8p5O6PtswWapEHE",
+    authDomain: "nhixinhne-a39e2.firebaseapp.com",
+    projectId: "nhixinhne-a39e2",
+    storageBucket: "nhixinhne-a39e2.firebasestorage.app",
+    messagingSenderId: "677175421970",
+    appId: "1:677175421970:web:9aa74f064d02f49537fccb",
+    measurementId: "G-H363JEFJ8P"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+
+  // Initialize Firestore
+  const db = getFirestore(app);
+
+  // Make db available globally
+  window.db = db;
+  window.doc = doc;
+  window.getDoc = getDoc;
+  window.setDoc = setDoc;
+</script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#bba47b",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221016",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem", // 16px
+                        "lg": "1.5rem",    // 24px - Modified for better mobile inputs
+                        "xl": "3rem",      // 48px - Very round
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(238, 43, 108, 0.1)',
+                        'card': '0 2px 10px rgba(0, 0, 0, 0.03)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-100 antialiased min-h-screen pb-24">
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4">
+    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    <div class="text-center">
+      <h3 id="loadingText" class="text-lg font-bold text-gray-900 dark:text-white">Đang tải dữ liệu...</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Vui lòng đợi trong giây lát</p>
+    </div>
+  </div>
+</div>
+<div class="sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
+<div class="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<h1 class="text-xl font-bold tracking-tight">Quản Lý Bio</h1>
+</div>
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-gray-500 hover:text-primary transition-colors" title="Xem thử">visibility</button>
+<button id="publishBtn" class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-full text-sm font-bold shadow-soft transition-all transform active:scale-95">
+                    Xuất bản
+                </button>
+</div>
+</div>
+</div>
+<div class="max-w-md mx-auto px-4 pt-6 flex flex-col gap-8">
+<section class="flex flex-col items-center gap-6">
+<div class="relative group cursor-pointer">
+<div class="w-28 h-28 rounded-full border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden bg-gray-200">
+<img id="avatarPreview" alt="Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4-4nseipxqo0kUCZE9uFM44MdTSYdXZK7Ip6KdlyymxoMUAFfS7Ve06-Q9hHGxjPluC6X1APdZdN4rucbf81eaxjkm_YhmgvFAXw4pcASA-ix8llEXZC5nUN6SacEV2XF_k-dtb9Yva94yHVEtkau6hvENT-rlCm-EdLda-wSIKp47tOJkZDAYu-1VrHNM-2ra5qRFgsaqhl86noxOuc2f75yKQwk7z-_QUC1XkJ0rEhR3XHAN6BLxLkkhAlcI2nDPjqbfeDSZ3h2"/>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary text-white w-9 h-9 rounded-full flex items-center justify-center shadow-md border-2 border-background-light dark:border-background-dark cursor-pointer" onclick="document.getElementById('avatarInput').click()">
+<span class="material-symbols-outlined text-lg">photo_camera</span>
+</div>
+<input type="file" id="avatarInput" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+</div>
+<div class="w-full space-y-4">
+<div class="space-y-1.5">
+<label class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Tên hiển thị</label>
+<input class="w-full h-12 px-4 rounded-lg bg-white dark:bg-gray-800 border-transparent focus:border-primary focus:ring-0 text-gray-900 dark:text-white font-medium shadow-card placeholder-gray-400" type="text" value="Mẹ Bỉm Sữa Review"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Giới thiệu (Bio)</label>
+<textarea class="w-full h-24 p-4 rounded-lg bg-white dark:bg-gray-800 border-transparent focus:border-primary focus:ring-0 text-gray-900 dark:text-white text-sm shadow-card resize-none placeholder-gray-400 leading-relaxed">Chia sẻ kinh nghiệm nuôi dạy con & săn deal hot cho bé yêu 🍼 Follow để nhận voucher mỗi ngày nhé!</textarea>
+</div>
+</div>
+</section>
+<section class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-card border border-gray-50 dark:border-gray-700">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">image</span>
+                    Hình nền
+                </h2>
+</div>
+<div class="space-y-4">
+<div class="relative group cursor-pointer" onclick="document.getElementById('backgroundInput').click()">
+<div id="backgroundPreview" class="w-full h-32 bg-gradient-to-br from-pink-100 to-purple-100 dark:from-gray-700 dark:to-gray-600 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-500 flex items-center justify-center transition-all group-hover:border-primary">
+<div class="text-center">
+<span class="material-symbols-outlined text-3xl text-gray-400 group-hover:text-primary transition-colors">add_photo_alternate</span>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Nhấn để thay đổi hình nền</p>
+</div>
+</div>
+<div class="absolute top-2 right-2 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-lg text-gray-600 dark:text-gray-300">edit</span>
+</div>
+</div>
+<input type="file" id="backgroundInput" accept="image/*" class="hidden" onchange="handleBackgroundUpload(event)">
+<div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-sm text-primary">info</span>
+</div>
+<p class="text-xs text-gray-600 dark:text-gray-300">Hình nền sẽ hiển thị trong khung dọc. Kích thước tối ưu: 400x800px (mobile) hoặc 1200x800px (desktop)</p>
+</div>
+</input>
+</section>
+<section class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-card border border-gray-50 dark:border-gray-700">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">category</span>
+                    Danh mục
+                </h2>
+<div class="flex items-center gap-2">
+<button id="deleteSelectedCategoryBtn" class="text-red-500 text-sm font-bold flex items-center gap-1 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1.5 rounded-lg transition-colors opacity-50 cursor-not-allowed" disabled>
+<span class="material-symbols-outlined text-lg">delete</span> Xóa danh mục
+                    </button>
+<button id="addCategoryBtn" class="text-primary text-sm font-bold flex items-center gap-1 hover:bg-primary/5 px-2 py-1.5 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-lg">add</span> Thêm mới
+                    </button>
+</div>
+</div>
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-4 snap-x" id="categoriesList">
+<!-- Categories will be dynamically added here -->
+</div>
+<div id="categoryEditor" class="pt-4 border-t border-dashed border-gray-200 dark:border-gray-700 space-y-5 hidden">
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Chọn Icon</label>
+<button class="text-xs text-primary font-bold">Xem tất cả</button>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar py-1" id="iconSelector">
+<!-- Icon options will be dynamically added here -->
+</div>
+</div>
+<div class="grid gap-4">
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Tên danh mục</label>
+<input id="categoryName" class="w-full h-11 px-3 rounded-lg bg-gray-50 dark:bg-gray-900 border-transparent focus:border-primary focus:ring-0 text-sm font-bold text-gray-900 dark:text-white transition-all placeholder-gray-400" type="text" placeholder="Nhập tên danh mục..."/>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Mô tả (Tùy chọn)</label>
+<input id="categoryDesc" class="w-full h-11 px-3 rounded-lg bg-gray-50 dark:bg-gray-900 border-transparent focus:border-primary focus:ring-0 text-sm font-medium text-gray-900 dark:text-white transition-all placeholder-gray-400" placeholder="Nhập mô tả ngắn cho danh mục..." type="text"/>
+</div>
+</div>
+<div class="flex items-center justify-between gap-3 pt-2">
+<button id="deleteCategoryBtn" class="text-gray-400 hover:text-red-500 flex items-center gap-1 pl-1 pr-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-xs font-bold hidden" title="Xóa danh mục">
+<span class="material-symbols-outlined text-lg">delete</span> Xóa
+                    </button>
+<div class="flex gap-2">
+<button id="cancelCategoryBtn" class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+Hủy
+</button>
+<button id="saveCategoryBtn" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-2 rounded-lg text-sm font-bold shadow-md hover:opacity-90 transition-opacity">
+Lưu danh mục
+</button>
+</div>
+</div>
+</div>
+</section>
+<div class="space-y-4" id="productsSection">
+<h2 class="text-lg font-bold text-gray-900 dark:text-white px-1" id="productsTitle">Chọn danh mục để xem sản phẩm</h2>
+<div id="productsList">
+<!-- Products will be dynamically added here -->
+</div>
+</div>
+<div class="h-24"></div>
+</div>
+<div class="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pointer-events-none flex justify-center z-40">
+<button class="pointer-events-auto bg-gray-900 dark:bg-white text-white dark:text-gray-900 h-14 w-full max-w-sm rounded-lg flex items-center justify-center gap-3 font-bold shadow-xl hover:scale-[1.02] transition-transform active:scale-95">
+<span class="material-symbols-outlined">add</span>
+            Thêm sản phẩm mới
+        </button>
+</div>
+
+<script>
+// Data structures
+let categories = [];
+
+let selectedCategoryId = null;
+let editingCategoryId = null;
+let availableIcons = ['child_care', 'toys', 'restaurant', 'checkroom', 'stroller', 'crib', 'medical_services', 'smart_toy', 'celebration', 'sports_soccer'];
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+
+// Initialize app without Google API (uploads handled by backend)
+async function initializeApp() {
+    console.log('🚀 Initializing Nhixinhne Admin Dashboard...');
+
+    // Show loading overlay during data loading
+    showLoadingOverlay();
+
+    try {
+        // Load existing data from backend first
+        await loadExistingData();
+
+        // Initialize app functionality
+        loadCategories();
+        setupEventListeners();
+        renderIconSelector();
+
+        console.log('✅ App initialized successfully');
+    } finally {
+        // Hide loading overlay
+        hideLoadingOverlay();
+    }
+}
+
+// Global variables to store existing data
+let existingProfileData = null;
+let existingBackgroundImage = null;
+
+// Load existing data from backend
+async function loadExistingData() {
+    console.log('📥 Loading existing data from backend...');
+
+    try {
+        // TODO: Update this URL to your Render backend URL
+        const BACKEND_URL = 'https://nhixinhne.onrender.com';
+
+        // Load config data
+        const configResponse = await fetch(`${BACKEND_URL}/api/site-data`);
+        if (configResponse.ok) {
+            const configData = await configResponse.json();
+            console.log('✅ Config data loaded:', configData);
+
+            // Store existing data globally
+            existingProfileData = configData.profile || null;
+            existingBackgroundImage = configData.backgroundImage || null;
+
+            // Populate profile fields
+            if (configData.profile) {
+                document.querySelector('input[type="text"]').value = configData.profile.name || '';
+                document.querySelector('textarea').value = configData.profile.bio || '';
+
+                // Set avatar preview
+                if (configData.profile.avatar) {
+                    document.getElementById('avatarPreview').src = configData.profile.avatar;
+                }
+            }
+
+            // Set background preview
+            if (configData.backgroundImage) {
+                const bgPreview = document.getElementById('backgroundPreview');
+                bgPreview.style.backgroundImage = `url("${configData.backgroundImage}")`;
+                bgPreview.style.backgroundSize = 'cover';
+                bgPreview.style.backgroundPosition = 'center';
+                bgPreview.innerHTML = ''; // Remove placeholder
+            }
+        }
+
+        // Load categories data
+        const categoriesResponse = await fetch(`${BACKEND_URL}/api/categories`);
+        if (categoriesResponse.ok) {
+            const categoriesData = await categoriesResponse.json();
+            console.log('✅ Categories data loaded:', categoriesData);
+
+            if (categoriesData.categories && categoriesData.categories.length > 0) {
+                categories = categoriesData.categories;
+                console.log('📂 Loaded categories:', categories.length);
+            }
+        }
+
+    } catch (error) {
+        console.error('❌ Error loading existing data:', error);
+        // Continue with empty data - user can start fresh
+    }
+}
+
+function setupEventListeners() {
+    // Category management
+    document.getElementById('addCategoryBtn').addEventListener('click', () => showCategoryEditor());
+    document.getElementById('cancelCategoryBtn').addEventListener('click', () => hideCategoryEditor());
+    document.getElementById('saveCategoryBtn').addEventListener('click', () => saveCategory());
+    document.getElementById('deleteCategoryBtn').addEventListener('click', () => deleteCategory());
+    document.getElementById('deleteSelectedCategoryBtn').addEventListener('click', () => deleteSelectedCategory());
+
+    // Product management
+    document.querySelector('.fixed button').addEventListener('click', () => addNewProduct());
+
+    // Publish/Save functionality
+    document.getElementById('publishBtn').addEventListener('click', () => saveToFirebase());
+
+    // Preview functionality - redirect to index.html with back parameter
+    document.querySelector('button[title="Xem thử"]').addEventListener('click', () => {
+        window.location.href = 'index.html?from=edit0503';
+    });
+
+    // Initialize drag-and-drop functionality
+    initializeDragAndDrop();
+}
+
+function loadCategories() {
+    const categoriesList = document.getElementById('categoriesList');
+    categoriesList.innerHTML = '';
+
+    categories.forEach(category => {
+        const categoryBtn = createCategoryButton(category);
+        categoriesList.appendChild(categoryBtn);
+    });
+}
+
+function createCategoryButton(category) {
+    const button = document.createElement('button');
+    button.className = `flex-shrink-0 snap-start ${selectedCategoryId === category.id ? 'bg-primary/10 text-primary border-primary' : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-transparent'} pl-3 pr-4 py-2 rounded-lg font-semibold text-sm border hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2 transition-colors`;
+    button.innerHTML = `
+        <div class="drag-handle cursor-grab active:cursor-grabbing p-1 -ml-2 mr-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <span class="material-symbols-outlined text-base">drag_indicator</span>
+        </div>
+        <span class="material-symbols-outlined text-lg">${category.icon}</span>
+        ${category.name}
+    `;
+    button.addEventListener('click', (e) => {
+        // Don't select category if clicking on drag handle
+        if (!e.target.closest('.drag-handle')) {
+            selectCategory(category.id);
+        }
+    });
+    return button;
+}
+
+function selectCategory(categoryId) {
+    selectedCategoryId = categoryId;
+    loadCategories();
+    showCategoryProducts(categoryId);
+
+    // Enable delete category button
+    const deleteBtn = document.getElementById('deleteSelectedCategoryBtn');
+    if (deleteBtn) {
+        deleteBtn.disabled = false;
+        deleteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        deleteBtn.classList.add('hover:bg-red-50', 'dark:hover:bg-red-900/20');
+    }
+}
+
+function showCategoryProducts(categoryId) {
+    const category = categories.find(c => c.id === categoryId);
+    const productsTitle = document.getElementById('productsTitle');
+    const productsList = document.getElementById('productsList');
+
+    productsTitle.textContent = `Sản phẩm - ${category.name} (${category.products.length})`;
+    productsList.innerHTML = '';
+
+    if (category.products.length === 0) {
+        productsList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <span class="material-symbols-outlined text-4xl mb-2 block">inventory_2</span>
+                Chưa có sản phẩm nào trong danh mục này
+            </div>
+        `;
+        return;
+    }
+
+    category.products.forEach(product => {
+        const productCard = createProductCard(product, categoryId);
+        productsList.appendChild(productCard);
+    });
+
+    // Reinitialize drag-and-drop for products after updating the list
+    initializeDragAndDrop();
+}
+
+function createProductCard(product, categoryId) {
+    const card = document.createElement('div');
+    card.className = 'bg-white dark:bg-slate-800 p-4 rounded-DEFAULT shadow-card flex gap-4 group';
+    card.innerHTML = `
+        <div class="drag-handle cursor-grab active:cursor-grabbing flex items-center justify-center w-8 h-8 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors shrink-0">
+            <span class="material-symbols-outlined text-base text-gray-500">drag_indicator</span>
+        </div>
+        <div class="shrink-0 w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-lg relative overflow-hidden">
+            ${product.image ? `<img alt="${product.name}" class="w-full h-full object-cover" src="${product.image}">` : '<div class="w-full h-full flex items-center justify-center text-gray-300"><span class="material-symbols-outlined text-3xl">image</span></div>'}
+            <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onclick="document.getElementById('productImageInput_${product.id}').click()">
+                <span class="material-symbols-outlined text-white">edit</span>
+            </div>
+            <input type="file" id="productImageInput_${product.id}" accept="image/*" class="hidden" onchange="handleProductImageUpload(event, '${categoryId}', '${product.id}')">
+        </div>
+        <div class="flex-1 flex flex-col gap-2 min-w-0">
+            <input class="w-full h-9 px-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border-none focus:ring-1 focus:ring-primary text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400" type="text" value="${product.name}" onchange="updateProductName('${categoryId}', '${product.id}', this.value)">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-gray-400 text-lg">link</span>
+                <input class="w-full h-9 px-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary text-xs text-gray-900 dark:text-white font-medium placeholder-gray-400 transition-all" type="text" value="${product.link}" onchange="updateProductLink('${categoryId}', '${product.id}', this.value)">
+            </div>
+            <div class="flex items-center justify-between mt-auto pt-1">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" class="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary" ${product.isKey ? 'checked' : ''} onchange="setProductKey('${categoryId}', '${product.id}', this.checked)">
+                        <span class="text-xs font-medium text-gray-500">Key</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-5 rounded-full ${product.visible ? 'bg-primary' : 'bg-gray-300'} flex items-center ${product.visible ? 'justify-end' : 'justify-start'} px-1 cursor-pointer" onclick="toggleProductVisibility('${categoryId}', '${product.id}')">
+                            <div class="w-3 h-3 bg-white rounded-full"></div>
+                        </div>
+                        <span class="text-xs font-medium text-gray-500">${product.visible ? 'Hiển thị' : 'Ẩn'}</span>
+                    </div>
+                </div>
+                <button class="text-red-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" onclick="deleteProduct('${categoryId}', '${product.id}')">
+                    <span class="material-symbols-outlined text-xl">delete</span>
+                </button>
+            </div>
+        </div>
+    `;
+    return card;
+}
+
+function showCategoryEditor(categoryId = null) {
+    const editor = document.getElementById('categoryEditor');
+    const nameInput = document.getElementById('categoryName');
+    const descInput = document.getElementById('categoryDesc');
+    const deleteBtn = document.getElementById('deleteCategoryBtn');
+
+    editingCategoryId = categoryId;
+
+    if (categoryId) {
+        const category = categories.find(c => c.id === categoryId);
+        nameInput.value = category.name;
+        descInput.value = category.description;
+        selectIcon(category.icon);
+        deleteBtn.classList.remove('hidden');
+    } else {
+        nameInput.value = '';
+        descInput.value = '';
+        selectIcon('child_care');
+        deleteBtn.classList.add('hidden');
+    }
+
+    editor.classList.remove('hidden');
+    nameInput.focus();
+}
+
+function hideCategoryEditor() {
+    document.getElementById('categoryEditor').classList.add('hidden');
+    editingCategoryId = null;
+}
+
+function saveCategory() {
+    const nameInput = document.getElementById('categoryName');
+    const descInput = document.getElementById('categoryDesc');
+    const name = nameInput.value.trim();
+    const description = descInput.value.trim();
+
+    if (!name) {
+        alert('Tên danh mục là bắt buộc!');
+        return;
+    }
+
+    // Description is optional - no validation required
+
+    if (editingCategoryId) {
+        // Update existing category
+        const category = categories.find(c => c.id === editingCategoryId);
+        category.name = name;
+        category.description = description;
+        category.icon = getSelectedIcon();
+    } else {
+        // Create new category
+        const newCategory = {
+            id: 'cat' + Date.now(),
+            name: name,
+            icon: getSelectedIcon(),
+            description: description,
+            products: []
+        };
+        categories.push(newCategory);
+    }
+
+    loadCategories();
+    hideCategoryEditor();
+
+    // If editing, refresh products if this category is selected
+    if (editingCategoryId && selectedCategoryId === editingCategoryId) {
+        showCategoryProducts(editingCategoryId);
+    }
+}
+
+function deleteCategory() {
+    if (!editingCategoryId) return;
+
+    if (confirm('Bạn có chắc muốn xóa danh mục này và tất cả sản phẩm trong đó?')) {
+        categories = categories.filter(c => c.id !== editingCategoryId);
+        if (selectedCategoryId === editingCategoryId) {
+            selectedCategoryId = null;
+            document.getElementById('productsTitle').textContent = 'Chọn danh mục để xem sản phẩm';
+            document.getElementById('productsList').innerHTML = '';
+        }
+        loadCategories();
+        hideCategoryEditor();
+    }
+}
+
+function deleteSelectedCategory() {
+    if (!selectedCategoryId) {
+        alert('Vui lòng chọn danh mục để xóa!');
+        return;
+    }
+
+    const category = categories.find(c => c.id === selectedCategoryId);
+    if (!category) return;
+
+    const confirmMessage = `Bạn có chắc muốn xóa danh mục "${category.name}" và tất cả ${category.products.length} sản phẩm trong đó?\n\nHành động này không thể hoàn tác!`;
+
+    if (confirm(confirmMessage)) {
+        // Remove category from array
+        categories = categories.filter(c => c.id !== selectedCategoryId);
+
+        // Reset selection and UI
+        selectedCategoryId = null;
+        document.getElementById('productsTitle').textContent = 'Chọn danh mục để xem sản phẩm';
+        document.getElementById('productsList').innerHTML = '';
+
+        // Disable delete button
+        const deleteBtn = document.getElementById('deleteSelectedCategoryBtn');
+        if (deleteBtn) {
+            deleteBtn.disabled = true;
+            deleteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            deleteBtn.classList.remove('hover:bg-red-50', 'dark:hover:bg-red-900/20');
+        }
+
+        // Reload categories list
+        loadCategories();
+
+        console.log('🗑️ Category deleted successfully');
+        alert('Đã xóa danh mục thành công!');
+    }
+}
+
+function renderIconSelector() {
+    const iconSelector = document.getElementById('iconSelector');
+    iconSelector.innerHTML = '';
+
+    availableIcons.forEach(icon => {
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center text-gray-400 hover:text-primary hover:border-primary cursor-pointer shrink-0 transition-all icon-option';
+        iconDiv.setAttribute('data-icon', icon);
+        iconDiv.innerHTML = `<span class="material-symbols-outlined">${icon}</span>`;
+        iconDiv.addEventListener('click', () => selectIcon(icon));
+        iconSelector.appendChild(iconDiv);
+    });
+}
+
+function selectIcon(iconName) {
+    document.querySelectorAll('.icon-option').forEach(el => {
+        el.classList.remove('border-primary', 'text-primary');
+        el.innerHTML = `<span class="material-symbols-outlined">${el.getAttribute('data-icon')}</span>`;
+    });
+
+    const selectedIcon = document.querySelector(`[data-icon="${iconName}"]`);
+    selectedIcon.classList.add('border-primary', 'text-primary');
+    selectedIcon.innerHTML = `
+        <span class="material-symbols-outlined">${iconName}</span>
+        <div class="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white rounded-full flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-[10px] font-bold">check</span>
+        </div>
+    `;
+}
+
+function getSelectedIcon() {
+    const selected = document.querySelector('.icon-option.border-primary');
+    return selected ? selected.getAttribute('data-icon') : 'child_care';
+}
+
+function addNewProduct() {
+    if (!selectedCategoryId) {
+        alert('Vui lòng chọn danh mục trước khi thêm sản phẩm!');
+        return;
+    }
+
+    const category = categories.find(c => c.id === selectedCategoryId);
+    const newProduct = {
+        id: 'prod' + Date.now(),
+        name: '',
+        link: '',
+        image: '',
+        visible: false
+    };
+
+    category.products.unshift(newProduct);
+    showCategoryProducts(selectedCategoryId);
+
+    // Focus on the new product name input
+    setTimeout(() => {
+        const firstProductInput = document.querySelector('#productsList input[type="text"]');
+        if (firstProductInput) firstProductInput.focus();
+    }, 100);
+}
+
+function updateProductName(categoryId, productId, newName) {
+    const category = categories.find(c => c.id === categoryId);
+    const product = category.products.find(p => p.id === productId);
+    product.name = newName;
+}
+
+function updateProductLink(categoryId, productId, newLink) {
+    const category = categories.find(c => c.id === categoryId);
+    const product = category.products.find(p => p.id === productId);
+    product.link = newLink;
+
+    console.log('🔗 Link updated for product:', productId, 'Link:', newLink);
+}
+
+function setProductKey(categoryId, productId, isChecked) {
+    const category = categories.find(c => c.id === categoryId);
+    const product = category.products.find(p => p.id === productId);
+
+    if (isChecked) {
+        // Clear all key flags first (only one can be key)
+        categories.forEach(cat => {
+            cat.products.forEach(prod => {
+                prod.isKey = false;
+            });
+        });
+
+        // Set this product as key
+        product.isKey = true;
+        console.log('🎯 Key product set:', { categoryId, productId, productName: product.name });
+    } else {
+        // Uncheck this product
+        product.isKey = false;
+        console.log('🎯 Key product unset:', { categoryId, productId, productName: product.name });
+    }
+
+    // Refresh the display to show the checkbox state
+    showCategoryProducts(categoryId);
+}
+
+function toggleProductVisibility(categoryId, productId) {
+    const category = categories.find(c => c.id === categoryId);
+    const product = category.products.find(p => p.id === productId);
+    product.visible = !product.visible;
+    showCategoryProducts(categoryId);
+}
+
+function deleteProduct(categoryId, productId) {
+    if (confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
+        const category = categories.find(c => c.id === categoryId);
+        category.products = category.products.filter(p => p.id !== productId);
+        showCategoryProducts(categoryId);
+    }
+}
+
+// Google Drive API variables
+let isGoogleApiLoaded = false;
+
+// Image upload variables
+let selectedAvatarFile = null;
+let selectedBackgroundFile = null;
+let selectedProductFile = null;
+let editingProductId = null;
+
+// Initialize Google API
+function initGoogleAPI() {
+    return new Promise((resolve, reject) => {
+        // Check if gapi is available
+        if (typeof gapi === 'undefined') {
+            console.error('Google API script not loaded');
+            reject(new Error('Google API script not loaded'));
+            return;
+        }
+
+        gapi.load('client:auth2', async () => {
+            try {
+                await gapi.client.init({
+                    apiKey: 'AIzaSyBk0GLruKL0GiU_ZZcL8p5O6PtswWapEHE',
+                    clientId: '1095185262237-qucee3m9nr0l0o7nge77nn36uv7676op.apps.googleusercontent.com', // You'll need to replace this
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                    scope: 'https://www.googleapis.com/auth/drive.file'
+                });
+
+                isGoogleApiLoaded = true;
+                console.log('Google API initialized successfully');
+                resolve();
+            } catch (error) {
+                console.error('Error initializing Google API:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+// Handle avatar image upload
+function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        selectedAvatarFile = file;
+
+        // Preview image
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatarPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        console.log('Avatar selected:', file.name);
+    }
+}
+
+// Handle background image upload
+function handleBackgroundUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        selectedBackgroundFile = file;
+
+        // Preview image
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewDiv = document.getElementById('backgroundPreview');
+            previewDiv.style.backgroundImage = `url("${e.target.result}")`;
+            previewDiv.style.backgroundSize = 'cover';
+            previewDiv.style.backgroundPosition = 'center';
+            previewDiv.innerHTML = ''; // Remove placeholder content
+        };
+        reader.readAsDataURL(file);
+
+        console.log('Background selected:', file.name);
+    }
+}
+
+// Upload file to Google Drive
+async function uploadToGoogleDrive(file) {
+    if (!isGoogleApiLoaded) {
+        throw new Error('Google API not loaded');
+    }
+
+    try {
+        // Check if user is signed in
+        const authInstance = gapi.auth2.getAuthInstance();
+        if (!authInstance.isSignedIn.get()) {
+            await authInstance.signIn();
+        }
+
+        // Create file metadata
+        const metadata = {
+            name: file.name,
+            mimeType: file.type,
+            parents: ['root'] // Upload to root directory
+        };
+
+        // Create FormData for multipart upload
+        const formData = new FormData();
+        formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        formData.append('file', file);
+
+        // Upload file
+        const response = await gapi.client.drive.files.create({
+            resource: metadata,
+            media: {
+                mimeType: file.type,
+                body: file
+            }
+        });
+
+        const fileId = response.result.id;
+
+        // Make file publicly accessible
+        await gapi.client.drive.permissions.create({
+            fileId: fileId,
+            resource: {
+                role: 'reader',
+                type: 'anyone'
+            }
+        });
+
+        // Get public URL
+        const publicUrl = `https://drive.google.com/uc?id=${fileId}`;
+
+        console.log('File uploaded successfully:', publicUrl);
+        return publicUrl;
+
+    } catch (error) {
+        console.error('Error uploading to Google Drive:', error);
+        throw error;
+    }
+}
+
+// Wake up Render server (free tier sleeps when inactive)
+async function wakeUpServer() {
+    console.log('🌅 Waking up Render server...');
+
+    try {
+        const BACKEND_URL = 'https://nhixinhne.onrender.com';
+        const response = await fetch(`${BACKEND_URL}/health`, {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
+
+        if (response.ok) {
+            console.log('✅ Server is awake and responding');
+            return true;
+        } else {
+            console.log('⚠️ Server responded but not OK, will proceed anyway');
+            return true;
+        }
+    } catch (error) {
+        console.log('⚠️ Server wake-up request failed, will proceed anyway:', error.message);
+        return true; // Don't fail the entire process
+    }
+}
+
+// Save all data to backend API
+async function saveToFirebase() {
+    // Show loading overlay with publishing text
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    if (overlay && loadingText) {
+        loadingText.textContent = 'Đang xuất bản...';
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    console.log('🚀 Starting save process...');
+
+    // Wake up server first
+    await wakeUpServer();
+
+    try {
+        console.log('📝 Collecting form data...');
+
+        // Collect profile data from form inputs
+        const profileNameInput = document.querySelector('input[type="text"]');
+        const profileBioTextarea = document.querySelector('textarea');
+
+        const profileName = profileNameInput ? profileNameInput.value : '';
+        const profileBio = profileBioTextarea ? profileBioTextarea.value : '';
+
+        console.log('👤 Profile data collected:', { profileName, profileBio });
+        console.log('🖼️ Image files selected:', {
+            avatar: selectedAvatarFile ? selectedAvatarFile.name : 'none',
+            background: selectedBackgroundFile ? selectedBackgroundFile.name : 'none'
+        });
+
+        // Use existing URLs as defaults, only update if new files are uploaded
+        let profileAvatar = existingProfileData?.avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuD4-4nseipxqo0kUCZE9uFM44MdTSYdXZK7Ip6KdlyymxoMUAFfS7Ve06-Q9hHGxjPluC6X1APdZdN4rucbf81eaxjkm_YhmgvFAXw4pcASA-ix8llEXZC5nUN6SacEV2XF_k-dtb9Yva94yHVEtkau6hvENT-rlCm-EdLda-wSIKp47tOJkZDAYu-1VrHNM-2ra5qRFgsaqhl86noxOuc2f75yKQwk7z-_QUC1XkJ0rEhR3XHAN6BLxLkkhAlcI2nDPjqbfeDSZ3h2';
+        let backgroundImage = existingBackgroundImage || 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8aAcLjxpyVZyPCmL72kiLClze8F-26nZRzXjNA-qmY4h-RzSJhNeTrZLXfhEr5bEkoErKSv2uzqv6I_Z1c0WGToWBBo8lmLUNeAu_LDe-B6S3W7w34pYYpdPQrqxAz8xq3TpZqdZYGIbp69Ua_oGY5QBQh5-87_vbnvnV7ZBjOqxAz-WTUZIAhSwh7ZlLA7pHlcbVbQ-UyX1jMuk4iQ_-RC6DX9nJz-Q_qINfaQcsZmJBDXDCP-yJdKV9S66Jyooe_Tw2Che6pEPO';
+
+        console.log('📋 Using existing URLs as defaults:', {
+            avatar: profileAvatar,
+            background: backgroundImage
+        });
+
+        try {
+            if (selectedAvatarFile) {
+                console.log('📤 [3.1/6] Uploading avatar to backend...');
+                console.log('📄 Avatar file details:', {
+                    name: selectedAvatarFile.name,
+                    type: selectedAvatarFile.type,
+                    size: selectedAvatarFile.size
+                });
+
+                const formData = new FormData();
+                formData.append('avatar', selectedAvatarFile);
+                console.log('📦 FormData created with avatar file');
+
+                console.log('🌐 Making API call to /api/upload/avatar...');
+                // TODO: Replace with your actual Render backend URL
+                const BACKEND_URL = 'https://nhixinhne.onrender.com';
+                console.log('🔗 Backend URL:', BACKEND_URL);
+                const response = await fetch(`${BACKEND_URL}/api/upload/avatar`, {
+                    method: 'POST',
+                    body: formData
+                });
+                console.log('📡 API response received:', { status: response.status, ok: response.ok });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Avatar upload API response:', result);
+                    profileAvatar = result.publicUrl;
+                    console.log('💾 Avatar URL saved:', profileAvatar);
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Avatar upload failed - Response:', errorText);
+                    throw new Error(`Avatar upload failed: ${response.status} ${response.statusText}`);
+                }
+            } else {
+                console.log('⚠️ [3.1/6] No avatar file selected, using default');
+            }
+
+            if (selectedBackgroundFile) {
+                console.log('📤 [3.2/6] Uploading background to backend...');
+                console.log('📄 Background file details:', {
+                    name: selectedBackgroundFile.name,
+                    type: selectedBackgroundFile.type,
+                    size: selectedBackgroundFile.size
+                });
+
+                const formData = new FormData();
+                formData.append('background', selectedBackgroundFile);
+                console.log('📦 FormData created with background file');
+
+                console.log('🌐 Making API call to /api/upload/background...');
+                // TODO: Update this URL to your Render backend URL
+                const BACKEND_URL = 'https://nhixinhne.onrender.com'; // Replace with actual Render URL
+                const response = await fetch(`${BACKEND_URL}/api/upload/background`, {
+                    method: 'POST',
+                    body: formData
+                });
+                console.log('📡 API response received:', { status: response.status, ok: response.ok });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Background upload API response:', result);
+                    backgroundImage = result.publicUrl;
+                    console.log('💾 Background URL saved:', backgroundImage);
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Background upload failed - Response:', errorText);
+                    throw new Error(`Background upload failed: ${response.status} ${response.statusText}`);
+                }
+            } else {
+                console.log('⚠️ [3.2/6] No background file selected, using default');
+            }
+
+            // Upload product image if selected
+            if (selectedProductFile && editingProductId) {
+                console.log('📤 [3.3/6] Uploading product image to backend...');
+                console.log('📄 Product image file details:', {
+                    name: selectedProductFile.name,
+                    type: selectedProductFile.type,
+                    size: selectedProductFile.size
+                });
+
+                const formData = new FormData();
+                formData.append('productImage', selectedProductFile);
+                console.log('📦 FormData created with product image file');
+
+                console.log('🌐 Making API call to /api/upload/product-image...');
+                // TODO: Update this URL to your Render backend URL
+                const BACKEND_URL = 'https://nhixinhne.onrender.com'; // Replace with actual Render URL
+                const response = await fetch(`${BACKEND_URL}/api/upload/product-image`, {
+                    method: 'POST',
+                    body: formData
+                });
+                console.log('📡 API response received:', { status: response.status, ok: response.ok });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Product image upload API response:', result);
+
+                    // Update the product with the new image URL immediately
+                    const category = categories.find(cat => cat.products.some(prod => prod.id === editingProductId));
+                    if (category) {
+                        const product = category.products.find(prod => prod.id === editingProductId);
+                        if (product) {
+                            product.image = result.publicUrl;
+                            console.log('💾 Product image URL saved to product:', result.publicUrl);
+                        }
+                    }
+
+                    // Reset upload state
+                    selectedProductFile = null;
+                    editingProductId = null;
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Product image upload failed - Response:', errorText);
+                    throw new Error(`Product image upload failed: ${response.status} ${response.statusText}`);
+                }
+            } else {
+                console.log('⚠️ [3.3/6] No product image selected or no editing product');
+            }
+
+            console.log('✅ [3/6] Image upload process completed successfully');
+
+        } catch (uploadError) {
+            console.error('❌ [3/6] Image upload process failed:', uploadError);
+            console.error('❌ Error details:', {
+                message: uploadError.message,
+                stack: uploadError.stack
+            });
+            alert('Upload hình ảnh thất bại. Sẽ sử dụng hình mặc định.');
+        }
+
+        // Prepare data structure
+        const siteData = {
+            profile: {
+                name: profileName,
+                bio: profileBio,
+                avatar: profileAvatar
+            },
+            backgroundImage: backgroundImage,
+            categories: categories.map(cat => ({
+                id: cat.id,
+                name: cat.name,
+                icon: cat.icon,
+                description: cat.description,
+                products: cat.products.filter(prod => prod.visible).map(prod => ({
+                    id: prod.id,
+                    name: prod.name,
+                    link: prod.link,
+                    image: prod.image,
+                    visible: prod.visible,
+                    isKey: prod.isKey || false
+                }))
+            })),
+            lastUpdated: new Date().toISOString()
+        };
+
+        // Save to backend API
+        console.log('💾 [5/6] Saving to backend API...');
+        console.log('🌐 Making API call to /api/site-data...');
+        // TODO: Update this URL to your Render backend URL
+        const BACKEND_URL = 'https://nhixinhne.onrender.com'; // Replace with actual Render URL
+        const response = await fetch(`${BACKEND_URL}/api/site-data`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(siteData)
+        });
+        console.log('📡 API response received:', { status: response.status, ok: response.ok });
+
+        if (response.ok) {
+            console.log("Data saved successfully:", siteData);
+
+            // Hide loading overlay
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+
+            showSuccessDialog('Xuất bản thành công!', 'Trang web đã được cập nhật với dữ liệu mới.');
+
+            // Reset file selections
+            selectedAvatarFile = null;
+            selectedBackgroundFile = null;
+        } else {
+            throw new Error('Save failed');
+        }
+
+    } catch (error) {
+        console.error('💥 CRITICAL ERROR - Save process failed:', error);
+        console.error('❌ Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+
+        // Hide loading overlay on error
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        alert('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.');
+    }
+}
+
+function handleProductImageUpload(event, categoryId, productId) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    console.log('🖼️ Product image selected:', file.name, 'for product:', productId);
+
+    // Preview image immediately
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Find and update the product image in the UI
+        const productCard = event.target.closest('.bg-white.dark\\:bg-slate-800');
+        if (productCard) {
+            const imgElement = productCard.querySelector('img');
+            if (imgElement) {
+                imgElement.src = e.target.result;
+            } else {
+                // Replace placeholder with image
+                const imgContainer = productCard.querySelector('.shrink-0.w-24.h-24');
+                if (imgContainer) {
+                    imgContainer.innerHTML = `<img alt="Product image" class="w-full h-full object-cover" src="${e.target.result}">`;
+                }
+            }
+        }
+    };
+    reader.readAsDataURL(file);
+
+    // Store file for later upload during save
+    selectedProductFile = file;
+    editingProductId = productId;
+
+    console.log('📦 Product image stored for upload during save');
+}
+
+// Upload product image to Google Drive
+async function uploadProductImage() {
+    if (!selectedProductFile || !editingProductId) {
+        console.log('⚠️ No product image to upload');
+        return null;
+    }
+
+    try {
+        console.log('🖼️ [4/6] Uploading product image to backend...');
+        console.log('📄 Product image details:', {
+            name: selectedProductFile.name,
+            type: selectedProductFile.type,
+            size: selectedProductFile.size
+        });
+
+        const formData = new FormData();
+        formData.append('productImage', selectedProductFile);
+        console.log('📦 FormData created with product image file');
+
+        console.log('🌐 Making API call to /api/upload/product-image...');
+        // TODO: Update this URL to your Render backend URL
+        const BACKEND_URL = 'https://nhixinhne.onrender.com'; // Replace with actual Render URL
+        console.log('🔗 Backend URL:', BACKEND_URL);
+
+        const response = await fetch(`${BACKEND_URL}/api/upload/product-image`, {
+            method: 'POST',
+            body: formData
+        });
+        console.log('📡 API response received:', { status: response.status, ok: response.ok });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Product image upload API response:', result);
+
+            // Update the product with the new image URL
+            const category = categories.find(cat => cat.products.some(prod => prod.id === editingProductId));
+            if (category) {
+                const product = category.products.find(prod => prod.id === editingProductId);
+                if (product) {
+                    product.image = result.publicUrl;
+                    console.log('💾 Product image URL saved:', result.publicUrl);
+                }
+            }
+
+            // Reset upload state
+            selectedProductFile = null;
+            editingProductId = null;
+
+            return result.publicUrl;
+        } else {
+            const errorText = await response.text();
+            console.error('❌ Product image upload failed - Response:', errorText);
+            throw new Error(`Product image upload failed: ${response.status} ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error('❌ Error uploading product image:', error);
+        return null;
+    }
+}
+
+// Loading overlay helpers
+function showLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Preview modal functionality
+function openPreviewModal() {
+    // Create preview modal
+    const modal = document.createElement('div');
+    modal.id = 'previewModal';
+    modal.className = 'fixed inset-0 bg-black z-50 flex items-center justify-center';
+    modal.innerHTML = `
+        <div class="relative w-full h-full max-w-md mx-auto bg-white dark:bg-slate-900 overflow-hidden">
+            <!-- Close button -->
+            <button id="closePreviewBtn" class="absolute top-4 right-4 z-60 bg-black/20 backdrop-blur-sm text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/30 transition-colors">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+
+            <!-- Preview content -->
+            <div class="preview-content w-full h-full overflow-y-auto">
+                ${generatePreviewHTML()}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Add close functionality
+    document.getElementById('closePreviewBtn').addEventListener('click', closePreviewModal);
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closePreviewModal();
+        }
+    });
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+
+    console.log('👁️ Preview modal opened');
+}
+
+function closePreviewModal() {
+    const modal = document.getElementById('previewModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+        console.log('🔴 Preview modal closed');
+    }
+}
+
+function generatePreviewHTML() {
+    // Get current form data
+    const profileName = document.querySelector('input[type="text"]')?.value || 'Mẹ Bỉm Sữa Review';
+    const profileBio = document.querySelector('textarea')?.value || 'Chia sẻ kinh nghiệm nuôi dạy con & săn deal hot cho bé yêu 🍼 Follow để nhận voucher mỗi ngày nhé!';
+    const profileAvatar = document.getElementById('avatarPreview')?.src || 'https://lh3.googleusercontent.com/aida-public/AB6AXuD4-4nseipxqo0kUCZE9uFM44MdTSYdXZK7Ip6KdlyymxoMUAFfS7Ve06-Q9hHGxjPluC6X1APdZdN4rucbf81eaxjkm_YhmgvFAXw4pcASA-ix8llEXZC5nUN6SacEV2XF_k-dtb9Yva94yHVEtkau6hvENT-rlCm-EdLda-wSIKp47tOJkZDAYu-1VrHNM-2ra5qRFgsaqhl86noxOuc2f75yKQwk7z-_QUC1XkJ0rEhR3XHAN6BLxLkkhAlcI2nDPjqbfeDSZ3h2';
+
+    // Get background image
+    const backgroundPreview = document.getElementById('backgroundPreview');
+    let backgroundImage = '';
+    if (backgroundPreview && backgroundPreview.style.backgroundImage && backgroundPreview.style.backgroundImage !== 'none') {
+        backgroundImage = backgroundPreview.style.backgroundImage.replace('url("', '').replace('")', '');
+    } else {
+        backgroundImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8aAcLjxpyVZyPCmL72kiLClze8F-26nZRzXjNA-qmY4h-RzSJhNeTrZLXfhEr5bEkoErKSv2uzqv6I_Z1c0WGToWBBo8lmLUNeAu_LDe-B6S3W7w34pYYpdPQrqxAz8xq3TpZqdZYGIbp69Ua_oGY5QBQh5-87_vbnvnV7ZBjOqxAz-WTUZIAhSwh7ZlLA7pHlcbVbQ-UyX1jMuk4iQ_-RC6DX9nJz-Q_qINfaQcsZmJBDXDCP-yJdKV9S66Jyooe_Tw2Che6pEPO';
+    }
+
+    // Generate categories HTML
+    let categoriesHTML = '';
+    categories.forEach((category, index) => {
+        const visibleProducts = category.products.filter(p => p.visible);
+        categoriesHTML += `
+            <button class="group flex items-center gap-4 bg-primary p-3 pr-4 rounded-xl shadow-sm border border-white/20 hover:bg-primary/80 transition-all active:scale-[0.98]" style="animation-delay: ${0.2 + index * 0.1}s;">
+                <div class="text-white flex items-center justify-center rounded-xl bg-white/20 shrink-0 size-12 group-hover:bg-white/30 transition-colors">
+                    <span class="material-symbols-outlined">${category.icon}</span>
+                </div>
+                <div class="flex flex-col flex-1">
+                    <p class="text-[#4e342e] text-base font-bold leading-tight">${category.name}</p>
+                    <p class="text-white/80 text-xs">${category.description}</p>
+                </div>
+                <div class="shrink-0 text-white/80 group-hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </div>
+            </button>
+        `;
+    });
+
+    // Find key product for featured card
+    let featuredCardHTML = '';
+    let keyProduct = null;
+    for (const category of categories) {
+        const found = category.products.find(product => product.isKey && product.visible);
+        if (found) {
+            keyProduct = found;
+            break;
+        }
+    }
+
+    if (keyProduct) {
+        featuredCardHTML = `
+            <div class="px-4 pb-4 @container fade-in" style="animation-delay: 0.1s;">
+                <div class="flex flex-col items-stretch justify-start rounded-2xl shadow-lg shadow-pink-100 dark:shadow-none bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 overflow-hidden transform transition-transform hover:scale-[1.01]">
+                    <div class="relative w-full h-48 bg-center bg-no-repeat bg-cover">
+                        ${keyProduct.image
+                            ? `<div class="w-full h-full bg-center bg-no-repeat bg-cover" style='background-image: url("${keyProduct.image}");'></div>`
+                            : '<div class="w-full h-full bg-gradient-to-br from-blue-50 to-pink-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center"><span class="material-symbols-outlined text-6xl text-blue-200">shopping_bag</span></div>'
+                        }
+                        <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm animate-pulse">
+                            MUA NHIỀU
+                        </div>
+                    </div>
+                    <div class="flex w-full grow flex-col items-stretch justify-center gap-2 p-4">
+                        <p class="text-slate-900 dark:text-white text-lg font-bold leading-tight">${keyProduct.name}</p>
+                        <div class="flex flex-col gap-3">
+                            <button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-primary hover:bg-pink-600 active:bg-pink-700 text-white text-sm font-bold leading-normal transition-colors shadow-md shadow-pink-200 dark:shadow-none">
+                                <span class="truncate mr-2">Xem Ngay</span>
+                                <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Generate the complete preview HTML
+    return `
+        <div class="relative flex h-full w-full flex-col group/design-root overflow-x-hidden shadow-2xl bg-white dark:bg-slate-900 min-h-screen" style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+            <!-- Profile Header -->
+            <div class="flex p-4 flex-col gap-4 items-center pt-8 pb-6 bg-gradient-to-b from-primary/5 to-transparent dark:from-primary/10 fade-in">
+                <div class="bg-center bg-no-repeat bg-cover rounded-full size-28 border-4 border-white dark:border-slate-800 shadow-lg" style='background-image: url("${profileAvatar}");'>
+                </div>
+                <div class="flex flex-col items-center justify-center gap-4">
+                    <div class="flex items-center gap-1.5">
+                        <p class="text-[#4e342e] text-[32px] font-bold leading-tight tracking-tight text-center" style="font-family: 'Pacifico', cursive;">${profileName}</p>
+                        <span class="material-symbols-outlined text-blue-500 text-[20px]" title="Verified">verified</span>
+                    </div>
+                    <p class="text-white text-[28px] text-base font-medium leading-normal text-center max-w-[280px]">${profileBio}</p>
+                </div>
+            </div>
+
+            <!-- Featured Card -->
+            ${featuredCardHTML}
+
+            <!-- Categories Headline -->
+            <div class="px-4 pb-2 pt-2">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary" style="color: #4e342e;">category</span>
+                    <h2 class="text-white text-xl font-bold leading-tight">Danh Mục Sản Phẩm</h2>
+                </div>
+            </div>
+
+            <!-- Category List -->
+            <div class="flex flex-col gap-3 px-4 pb-8">
+                ${categoriesHTML}
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-auto p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                <a href="https://zalo.me/0843653353" target="_blank">
+                    <button class="flex w-full cursor-pointer items-center justify-center rounded-xl h-12 px-4 border-2 border-primary text-primary hover:bg-pink-50 dark:hover:bg-pink-900/20 text-base font-bold leading-normal transition-colors">
+                        <span class="material-symbols-outlined mr-2">mail</span>
+                        Liên hệ hợp tác
+                    </button>
+                </a>
+                <p class="text-center text-slate-400 text-[8px] mt-4">© 2026 Mẹ Nhí Affiliate. dev by Nuttency</p>
+            </div>
+        </div>
+    `;
+}
+
+// Custom success dialog
+function showSuccessDialog(title, message) {
+    // Create dialog element
+    const dialog = document.createElement('div');
+    dialog.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center';
+    dialog.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl max-w-sm mx-4">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-3xl text-green-600 dark:text-green-400">check_circle</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">${title}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">${message}</p>
+                <button class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-colors" onclick="this.closest('.fixed').remove()">
+                    Đã hiểu
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(dialog);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (dialog.parentNode) {
+            dialog.remove();
+        }
+    }, 5000);
+}
+
+// Initialize drag-and-drop functionality for categories and products
+function initializeDragAndDrop() {
+    // Initialize sortable for categories list
+    const categoriesList = document.getElementById('categoriesList');
+    if (categoriesList) {
+        new Sortable(categoriesList, {
+            handle: '.drag-handle', // Drag only by the handle
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                // Update categories array order
+                const movedItem = categories.splice(evt.oldIndex, 1)[0];
+                categories.splice(evt.newIndex, 0, movedItem);
+
+                console.log('📂 Categories reordered:', categories.map(cat => cat.name));
+            }
+        });
+    }
+
+    // Initialize sortable for products list (when a category is selected)
+    const productsList = document.getElementById('productsList');
+    if (productsList && selectedCategoryId) {
+        new Sortable(productsList, {
+            handle: '.drag-handle', // Drag only by the handle
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                // Update products array order within the selected category
+                const category = categories.find(c => c.id === selectedCategoryId);
+                if (category) {
+                    const movedItem = category.products.splice(evt.oldIndex, 1)[0];
+                    category.products.splice(evt.newIndex, 0, movedItem);
+
+                    console.log('📦 Products reordered in category:', category.name);
+                }
+            }
+        });
+    }
+}
+
+// Add some CSS for sortable states
+const sortableStyles = document.createElement('style');
+sortableStyles.textContent = `
+    .sortable-ghost {
+        opacity: 0.4;
+        background: rgba(187, 164, 123, 0.1) !important;
+    }
+    .sortable-chosen {
+        transform: scale(1.02);
+    }
+    .sortable-drag {
+        transform: rotate(5deg);
+    }
+`;
+document.head.appendChild(sortableStyles);
+
+// TODO: Implement Google Drive upload function
+// async function uploadToGoogleDrive(file) {
+//     // Implement Google Drive API upload here
+//     // Return the public URL of the uploaded file
+//     return 'https://drive.google.com/uc?id=uploaded_file_id';
+// }
+</script>
+</body></html>
