@@ -275,39 +275,26 @@ async function loadExistingData() {
     console.log('📥 Loading existing data from backend...');
 
     try {
-        // Try Render backend first, fallback to local server
+        // Use deployed backend URL
         let BACKEND_URL = 'https://tamly.onrender.com';
         let backendAvailable = false;
 
-        // Test connection to Render backend
+        // Test connection to backend
         try {
+            console.log('🔍 Testing backend connection to:', BACKEND_URL);
             const testResponse = await fetch(`${BACKEND_URL}/health`, {
                 method: 'GET',
                 headers: { 'Cache-Control': 'no-cache' }
             });
             if (testResponse.ok) {
                 backendAvailable = true;
-                console.log('✅ Render backend is available');
+                console.log('✅ Backend is available and responding');
+            } else {
+                console.log('⚠️ Backend responded but not OK:', testResponse.status);
             }
         } catch (error) {
-            console.log('⚠️ Render backend not available, trying local server...');
-        }
-
-        // If Render backend is not available, try local server
-        if (!backendAvailable) {
-            BACKEND_URL = 'http://localhost:3000';
-            try {
-                const testResponse = await fetch(`${BACKEND_URL}/health`, {
-                    method: 'GET',
-                    headers: { 'Cache-Control': 'no-cache' }
-                });
-                if (testResponse.ok) {
-                    backendAvailable = true;
-                    console.log('✅ Local backend is available');
-                }
-            } catch (error) {
-                console.log('⚠️ Local backend not available either');
-            }
+            console.log('❌ Backend connection failed:', error.message);
+            console.log('ℹ️ Continuing with default data...');
         }
 
         if (!backendAvailable) {
